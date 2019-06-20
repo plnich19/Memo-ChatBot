@@ -1,6 +1,10 @@
 const admin = require('firebase-admin');
 const serviceAccount = require("./serviceAccountKey.json");
 const functions = require('firebase-functions');
+const line = require('@line/bot-sdk');
+
+// create LINE SDK client
+const client = new line.Client(config);
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
