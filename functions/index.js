@@ -59,3 +59,29 @@ const getUsersData = function(db){
 const DeleteUserData = function(db){
     return db.doc("New Sample UserId").delete();
 };
+
+// <-- Database structure -->
+// data: {
+//     'groupId-fadgeagsdfreasdgfgesdf':{
+//       groupData:{
+//         title:'groupName',
+//         members: [
+//           username: 'fjeujnfsdlgmkadherfdmskdlshm',
+//           displayName: 'พิช',
+//           pictureUrl: 'https://wwfsfsgdf.com/fdsg.jpg',
+//           role: 'ADMIN'
+//         ]
+//       },
+//       tasks:[
+//         title:'task1',
+//         detail: 'detail1',
+//         status: 'DONE',
+//         assignee: [
+//           { 
+//             username : 'fjeujnfsdlgmkadherfdmskdlshm'
+//           }
+//         ]
+//       ]
+//     }
+//   }
+// <--End Database structure part -->
