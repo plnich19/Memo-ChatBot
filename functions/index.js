@@ -43,7 +43,7 @@ exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res
         replyToRoom(groupId,welComeMsg);
         const memberIds = await getGroupMemberIds(groupId);
         console.log(memberIds);
-      }
+    }
 
 //<---Write data part-->
 //getGroupMemberProfile or getuserProfilebyId
@@ -83,7 +83,7 @@ const reply = (replyToken,message) => {
       type: 'text',
       text: message
     });
-  };
+};
 
 const replyToRoom = (groupId,message) => {
     return client.pushMessage(groupId, {
