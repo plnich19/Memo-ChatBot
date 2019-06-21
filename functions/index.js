@@ -12,7 +12,7 @@ admin.initializeApp({
   });
 
 let db = admin.firestore();
-var userOneDocumentRef = db.collection('users');
+var dataOneDocumentRef = db.collection('data');
 // Get the `FieldValue` object
 let FieldValue = require('firebase-admin').firestore.FieldValue;
 
@@ -46,10 +46,16 @@ exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res
       }
 
 //<---Write data part-->
-// var UserId = "New Sample UserId";
-// userOneDocumentRef.doc(UserId).set({
-//     name: "New Ploy U",
-//     pictureUrl: "1",
+//getGroupMemberProfile or getuserProfilebyId
+//var memberData = [
+    //username: req.body.events[0].source.userId,
+    //displayName: req.body.events[0].source.displayName,
+    //pictureUrl: req.body.events[0].source.pictureUrl,
+    //role: 'ADMIN'
+//]
+// dataOneDocumentRef.doc(groupId).set({
+//     title: groupName,
+//     members: memberData,
 // })
 // .then(function() {
 //     console.log("Document successfully written!");
