@@ -27,8 +27,8 @@ exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res
         if(splitText[0] === "#create"){
             //do something
             const taskTitle = splitText[1];
+            console.log("taskTitle = ", taskTitle);
             //Check whether there is '@'
-            
         }
         else if(splitText[0] === "#display"){
             //send picture attached with liff link
@@ -36,7 +36,9 @@ exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res
     }else if(reqType === 'join'){
         const groupId = req.body.events[0].source.groupId;
         console.log('join');
-        const welComeMsg = `ขอบคุณที่ลากบอทเข้ากรุ๊ป ท่านสามารถใช้คำสั่งได้ดังนี้ \n - #Create new_task_name @name เพื่อสร้าง task ใหม่ หรือจะแค่ #Create new_task_name ก็ได้ \n - #display เพื่อให้บอทแสดง task list ของวันนี้`;
+        const welComeMsg = `ขอบคุณที่ลากบอทเข้ากรุ๊ป ท่านสามารถใช้คำสั่งได้ดังนี้ 
+        - #Create new_task_name @name เพื่อสร้าง task ใหม่ หรือจะแค่ #Create new_task_name ก็ได้ 
+        - #display เพื่อให้บอทแสดง task list ของวันนี้`;
         console.log(welComeMsg);
         replyToRoom(groupId,welComeMsg);
         const memberIds = await getGroupMemberIds(groupId);
@@ -70,11 +72,11 @@ exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res
 //DeleteUserData(userOneDocumentRef);
 });
 
-const getUserProfileById = function(userId) {
-    return client.getProfile(userId)
-            .catch((err) => {
-              console.log('getUserProfile err',err);
-            });
+const reply = (replyToken,message) => {
+    return client.replyMessage(replyToken, {
+      type: 'text',
+      text: message
+    });
   };
 
 const replyToRoom = (groupId,message) => {
