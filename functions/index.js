@@ -29,8 +29,18 @@ exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res
             const taskTitle = splitText[1];
             console.log("taskTitle = ", taskTitle);
             //Check whether there is '@'
-        }
-        else if(splitText[0] === "#display"){
+            if(splitText[2] !== undefined){
+                if(splitText[2].contains("@")){
+                    var splitText2 = splitText[2].split("@");
+                    console.log("SplitText2 = ", splitText2);
+                    var assignedUser = splitText2[1];
+                    console.log("assignedUser = ", assignedUser);
+                }
+                else{
+                    reply(replyToken,'Wrong command');
+                }
+            }
+        }else if(splitText[0] === "#display"){
             //send picture attached with liff link
         }
     }else if(reqType === 'join'){
@@ -116,10 +126,12 @@ const DeleteUserData = function(db){
 //       groupData:{
 //         title:'groupName',
 //         members: [
-//           username: 'fjeujnfsdlgmkadherfdmskdlshm',
-//           displayName: 'พิช',
-//           pictureUrl: 'https://wwfsfsgdf.com/fdsg.jpg',
-//           role: 'ADMIN'
+//           fjeujnfsdlgmkadherfdmskdlshm:[
+//              displayName: 'พิช',
+//              pictureUrl: 'https://wwfsfsgdf.com/fdsg.jpg',
+//              role: 'ADMIN'
+//]]
+//           
 //         ]
 //       },
 //       tasks:[
