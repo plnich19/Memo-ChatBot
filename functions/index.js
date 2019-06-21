@@ -18,6 +18,31 @@ let FieldValue = require('firebase-admin').firestore.FieldValue;
 
 exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res) => {
 
+    const reqType = req.body.events[0].type;
+    const replyToken = req.body.events[0].replyToken;
+
+    if(reqType === 'message'){
+        const userSaid = req.body.events[0].message.text.toLowerCase();
+        var splitText = userSaid.split(" ");
+        if(splitText[0] === "#create"){
+            //do something
+            const taskTitle = splitText[1];
+            //Check whether there is '@'
+            
+        }
+        else if(splitText[0] === "#display"){
+            //send picture attached with liff link
+        }
+    }else if(reqType === 'join'){
+        const groupId = req.body.events[0].source.groupId;
+        console.log('join');
+        const welComeMsg = `ขอบคุณที่ลากบอทเข้ากรุ๊ป ท่านสามารถใช้คำสั่งได้ดังนี้ \n - #Create new_task_name @name เพื่อสร้าง task ใหม่ หรือจะแค่ #Create new_task_name ก็ได้ \n - #display เพื่อให้บอทแสดง task list ของวันนี้`;
+        console.log(welComeMsg);
+        replyToRoom(groupId,welComeMsg);
+        const memberIds = await getGroupMemberIds(groupId);
+        console.log(memberIds);
+      }
+
 //<---Write data part-->
 // var UserId = "New Sample UserId";
 // userOneDocumentRef.doc(UserId).set({
@@ -33,14 +58,31 @@ exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res
 // });
 //<--End write data part-->
 
-let getUsers = await getUsersData(userOneDocumentRef);
-console.log("getUsers = ",getUsers);
-getUsers.forEach(user =>{
-    console.log("Users' name = ", user.name);
-})
+// <-- Read data from database part -->
+// let getUsers = await getUsersData(userOneDocumentRef);
+// console.log("getUsers = ",getUsers);
+// getUsers.forEach(user =>{
+//     console.log("Users' name = ", user.name);
+// })
+// <-- End read data part -->
 
-DeleteUserData(userOneDocumentRef);
+//Call delete data function
+//DeleteUserData(userOneDocumentRef);
 });
+
+const getUserProfileById = function(userId) {
+    return client.getProfile(userId)
+            .catch((err) => {
+              console.log('getUserProfile err',err);
+            });
+  };
+
+const replyToRoom = (groupId,message) => {
+    return client.pushMessage(groupId, {
+      type: 'text',
+      text: message
+    });
+  };
 
 const getUsersData = function(db){
     return db.get()
