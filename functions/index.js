@@ -59,11 +59,11 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const groupId = req.body.events[0].source.groupId;
             createTask(groupId,userSaid,dataOneDocumentRef);
             replyToRoom(groupId,'สร้าง task ให้เรียบร้อยแล้วน้า');
-        }else if(reqMessage.toLowerCase() === 'updateTask'){
+        }else if(reqMessage.toLowerCase() === 'updatetask'){
             //const userSaid = req.body.events[0].message.text;
             const groupId = req.body.events[0].source.groupId;
             updateTask(groupId);
-        }else if(reqMessage.toLowerCase() === 'getTask'){
+        }else if(reqMessage.toLowerCase() === 'gettask'){
             const groupId = req.body.events[0].source.groupId;
             getTask(groupId);
         }
