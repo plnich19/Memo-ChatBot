@@ -3,6 +3,10 @@ const serviceAccount = require("./serviceAccountKey.json");
 const functions = require('firebase-functions');
 const line = require('@line/bot-sdk');
 
+const config = {
+    channelAccessToken: 'pBQZX8sq2ilhDSMCpmNSS4bFcalkMiV2JzFbmQTlB9cBL8yNKK6N+1xnDPJ47E0Z6Xei5pz17m+fB+TgVRyilu9rl0Dk7dvtzroqrwGysALVLhwRb1gHUx34PJsA8C2xZhFkT+uLXzKngcWRTWIYblGUYhWQfeY8sLGRXgo3xvw=',
+    channelSecret: 'afc9b2ce41f4c642a1c3c3d3700dd395'
+};
 // create LINE SDK client
 const client = new line.Client(config);
 
