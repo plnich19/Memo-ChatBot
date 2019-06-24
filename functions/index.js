@@ -18,20 +18,89 @@ let FieldValue = require('firebase-admin').firestore.FieldValue;
 
 exports.addUser = functions.region('asia-east2').https.onRequest(async (req, res) => {
 
-//<---Write data part-->
-// var UserId = "New Sample UserId";
-// userOneDocumentRef.doc(UserId).set({
-//     name: "New Ploy U",
-//     pictureUrl: "1",
-// })
-// .then(function() {
-//     console.log("Document successfully written!");
-//     return "OK";
-// })
-// .catch(function(error) {
-//     console.error("Error writing document: ", error);
-// });
-//<--End write data part-->
+    const reqType = req.body.events[0].type;
+    const replyToken = req.body.events[0].replyToken;
+    const reqMessage = req.body.events[0].message.text;
+    if(reqType === 'message'){
+        if(reqMessage === 'เพิ่มเราหน่อย'){
+            const groupId = req.body.events[0].source.groupId;
+            const userId = req.body.events[0].source.userId;
+            const userProfile = await getUserProfileById(userId);
+            const welComeMsg = `OK ${userProfile.displayName}`;
+            console.log(welComeMsg);
+            replyToRoom(groupId,welComeMsg);
+            // <---Write data part-->
+            dataOneDocumentRef.doc(groupId).collection('members').doc(userId).set({
+                displayName: userProfile.displayName,
+                pictureUrl: userProfile.pictureUrl,
+                role: "Admin"
+            })
+            .then(function() {
+                console.log("Document successfully written!");
+                return "OK";
+            })
+            .catch(function(error) {
+                console.error("Error writing document: ", error);
+            });
+            // <--End write data part-->
+        }else if(reqMessage.toLowerCase() === 'getmember'){
+            const groupId = req.body.events[0].source.groupId;
+            getMembers(groupId,db);
+        }else if(reqMessage.toLowerCase().includes('getmemberprofile')){
+            const userSaid = req.body.events[0].message.text;
+            const groupId = req.body.events[0].source.groupId;
+            getMemberProfile(groupId,userSaid);
+        }else if(reqMessage.toLowerCase().includes('create')){
+            const userSaid = req.body.events[0].message.text;
+            const groupId = req.body.events[0].source.groupId;
+            createTask(groupId,userSaid,dataOneDocumentRef);
+            replyToRoom(groupId,'สร้าง task ให้เรียบร้อยแล้วน้า');
+        }else if(reqMessage.toLowerCase() === 'updateTask'){
+            //const userSaid = req.body.events[0].message.text;
+            const groupId = req.body.events[0].source.groupId;
+            updateTask(groupId);
+        }
+        // const userSaid = req.body.events[0].message.text.toLowerCase();
+        // var splitText = userSaid.split(" ");
+        // if(splitText[0] === "#create"){
+        //     //do something
+        //     const taskTitle = splitText[1];
+        //     console.log("taskTitle = ", taskTitle);
+        //     //Check whether there is '@'
+        //     if(splitText[2] !== undefined){
+        //         if(splitText[2].contains("@")){
+        //             var splitText2 = splitText[2].split("@");
+        //             console.log("SplitText2 = ", splitText2);
+        //             var assignedUser = splitText2[1];
+        //             console.log("assignedUser = ", assignedUser);
+        //         }
+        //         else{
+        //             reply(replyToken,'Wrong command');
+        //         }
+        //     }
+        // }else if(splitText[0] === "#display"){
+        //     //send picture attached with liff link
+        // }
+    }else if(reqType === 'join'){
+        const groupId = req.body.events[0].source.groupId;
+        console.log('join');
+        const welComeMsg = `ขอบคุณที่ลากบอทเข้ากรุ๊ป ท่านสามารถใช้คำสั่งได้ดังนี้ 
+        - #Create new_task_name @name เพื่อสร้าง task ใหม่ หรือจะแค่ #Create new_task_name ก็ได้ 
+        - #display เพื่อให้บอทแสดง task list ของวันนี้`;
+        console.log(welComeMsg);
+        replyToRoom(groupId,welComeMsg);
+        console.log(groupId);
+        const memberIds = await getGroupMemberIds(groupId);
+        console.log(memberIds);
+    }else if(reqType === 'memberJoined'){
+        const userId = req.body.events[0].joined.members[0].userId;
+        const groupId = req.body.events[0].source.groupId;
+        console.log('memberJoined');
+        const userProfile = await getUserProfileById(userId);
+        const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
+        console.log(welComeMsg);
+        replyToRoom(groupId,welComeMsg);
+      }
 
 let getUsers = await getUsersData(userOneDocumentRef);
 console.log("getUsers = ",getUsers);
@@ -60,28 +129,68 @@ const DeleteUserData = function(db){
     return db.doc("New Sample UserId").delete();
 };
 
-// <-- Database structure -->
-// data: {
-//     'groupId-fadgeagsdfreasdgfgesdf':{
-//       groupData:{
-//         title:'groupName',
-//         members: [
-//           username: 'fjeujnfsdlgmkadherfdmskdlshm',
-//           displayName: 'พิช',
-//           pictureUrl: 'https://wwfsfsgdf.com/fdsg.jpg',
-//           role: 'ADMIN'
-//         ]
-//       },
-//       tasks:[
-//         title:'task1',
-//         detail: 'detail1',
-//         status: 'DONE',
-//         assignee: [
-//           { 
-//             username : 'fjeujnfsdlgmkadherfdmskdlshm'
-//           }
-//         ]
-//       ]
-//     }
-//   }
-// <--End Database structure part -->
+const getMembers = async function(groupId){
+    // <-- Read data from database part -->
+    let membersDocumentRef = db.collection('data').doc(groupId).collection('members');
+    let getUsers = await getUsersData(membersDocumentRef);
+    console.log("getUsers = ",getUsers);
+    replyCorouselToRoom(groupId,getUsers);
+    //<-- End read data part -->
+}
+
+const getMemberProfile = async function(groupId,userSaid){
+    var splitText = userSaid.split("@");
+    console.log("splitText = ",splitText);
+    // <-- Read data from database part -->
+    let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',splitText[1].trim());
+    let getUsers = await getUsersData(FindmembersDocumentRef);
+    console.log("getUsers = ",getUsers);
+    const listName = await getUsername(getUsers);
+    replyCorouselToRoom(groupId,getUsers);
+    //<-- End read data part -->
+}
+
+const createTask = async function(groupId,userSaid){
+    var splitText = userSaid.split(" ");
+    console.log("SplitText = ", splitText);
+    // if(splitText[2] !== undefined && splitText[2].includes('@')){
+    //     var splitTextAgain = splitText[2].split("@");
+    //     console.log("splitTextAgain = ",splitTextAgain);
+    //     getMemberProfile(groupId,splitTextAgain[1]);
+    //     //do something
+    // }
+    let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
+     // <---Write data part-->
+     tasksDocumentRef.add({
+        title: splitText[1],
+        status: "NOT DONE",
+        assignee: "some ID"
+    })
+    .then(function() {
+        console.log("Task successfully written!");
+        return "OK";
+    })
+    .catch(function(error) {
+        console.error("Error writing document: ", error);
+    });
+    // <--End write data part-->
+}
+
+const updateTask = async function(groupId){
+    let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc('YuqCbuRs8mKH6HHmFaWa');
+    let transaction = db.runTransaction(t => {
+        return t.get(FindtasksDocumentRef)
+          .then(doc => {
+            // Add one person to the city population.
+            // Note: this could be done without a transaction
+            //       by updating the population using FieldValue.increment()
+            t.update(FindtasksDocumentRef, {status: "DONE"});
+            return "UPDATE";
+          });
+      }).then(result => {
+        console.log('Transaction success!');
+        return "OK2";
+      }).catch(err => {
+        console.log('Transaction failure:', err);
+      });
+}
