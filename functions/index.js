@@ -16,9 +16,7 @@ admin.initializeApp({
   });
 
 let db = admin.firestore();
-var userOneDocumentRef = db.collection('users');
-// Get the `FieldValue` object
-let FieldValue = require('firebase-admin').firestore.FieldValue;
+var dataOneDocumentRef = db.collection('data');
 
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
 
@@ -109,14 +107,86 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         replyToRoom(groupId,welComeMsg);
       }
 
-let getUsers = await getUsersData(userOneDocumentRef);
-console.log("getUsers = ",getUsers);
-getUsers.forEach(user =>{
-    console.log("Users' name = ", user.name);
-})
-
-DeleteUserData(userOneDocumentRef);
+//Call delete data function
+//DeleteUserData(userOneDocumentRef);
 });
+
+// const setMemberData = function(db, displayName,pictureUrl){
+//     return db.set({
+//         displayName: displayName,
+//         pictureUrl: pictureUrl,
+//         role: "Admin"
+//     }).then(function() {
+//         console.log("Member document successfully written!");
+//         return "OK";
+//     })
+//     .catch(function(error) {
+//         console.error("Error member document writing document: ", error);
+//     });
+// };
+
+const reply = (replyToken,message) => {
+    return client.replyMessage(replyToken, {
+    type: 'text',
+    text: message
+    });
+};
+
+const replyToRoom = (groupId,message) => {
+    return client.pushMessage(groupId, {
+    type: 'text',
+    text: message
+    });
+};
+
+const replyCorouselToRoom = (groupId,UsersArray) => {
+    return client.pushMessage(groupId, {
+        type: 'template',
+        altText: 'this is a carousel template',
+        template: {
+          type: 'carousel',
+          actions: [],
+          columns: UsersArray.map((member) => {
+            return {
+              thumbnailImageUrl: member.pictureUrl,
+              title: member.displayName,
+              text: member.role,
+              actions: [
+                {
+                  type: "message",
+                  label: "Action 1",
+                  text: "Action 1"
+                }
+              ]
+            }
+          })
+        }
+    });
+};
+
+const replyTaskCorouselToRoom = (groupId,TasksArray) => {
+    return client.pushMessage(groupId, {
+        type: 'template',
+        altText: 'this is a carousel template',
+        template: {
+          type: 'carousel',
+          actions: [],
+          columns: TasksArray.map((task) => {
+            return {
+              title: task.title,
+              text: task.status,
+              actions: [
+                {
+                  type: "message",
+                  label: "Action 1",
+                  text: "Action 1"
+                }
+              ]
+            }
+          })
+        }
+    });
+};
 
 const getUsersData = function(db){
     return db.get()
@@ -124,12 +194,34 @@ const getUsersData = function(db){
         let UsersArray = [];
         snapshot.forEach(doc => {
         const data = doc.data();
-          console.log(doc.id, '=>', data);
-          UsersArray.push(data);
+        console.log(doc.id, '=>', data);
+        UsersArray.push(data);
         });
 
         return UsersArray;
     })
+};
+
+const getUsername = function(array){
+    let listName = [];
+    array.forEach(user =>{
+        console.log("Users' name = ", user.displayName);
+        listName.push(user.displayName);
+    })
+    return listName;
+};
+const getUserProfileById = function(userId) {
+    return client.getProfile(userId)
+            .catch((err) => {
+            console.log('getUserProfile err',err);
+            });
+};
+
+const getGroupMemberIds = function(userId) {
+    return client.getGroupMemberIds(userId)
+            .catch((err) => {
+            console.log('getGroupMemberIds err',err);
+            });
 };
 
 const DeleteUserData = function(db){
@@ -204,9 +296,9 @@ const updateTask = async function(groupId){
 
 const getTask = async function(groupId){
     // <-- Read data from database part -->
-    let tasksDocumentRef = db.collection('data').doc(groupId).collection('task');
+    let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
     let getTasks = await getUsersData(tasksDocumentRef);
     console.log("getTasks = ",getTasks);
-    replyCorouselToRoom(groupId,getTasks);
+    replyTaskCorouselToRoom(groupId,getTasks);
     //<-- End read data part -->
 }
