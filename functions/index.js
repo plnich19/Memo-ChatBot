@@ -20,7 +20,7 @@ var userOneDocumentRef = db.collection('users');
 // Get the `FieldValue` object
 let FieldValue = require('firebase-admin').firestore.FieldValue;
 
-exports.ChatBot = functions.region('asia-east2').https.onRequest(async (req, res) => {
+exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
 
     const reqType = req.body.events[0].type;
     const replyToken = req.body.events[0].replyToken;
