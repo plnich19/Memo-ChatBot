@@ -64,6 +64,10 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         }else if(reqMessage.toLowerCase() === 'gettask'){
             const groupId = req.body.events[0].source.groupId;
             getTask(groupId);
+        }else if(reqMessage.toLowerCase() === 'updatemember'){
+            const groupId = req.body.events[0].source.groupId;
+            const userId = req.body.events[0].source.userId;
+            updateMember(groupId,userId);
         }
         // const userSaid = req.body.events[0].message.text.toLowerCase();
         // var splitText = userSaid.split(" ");
@@ -247,6 +251,25 @@ const getMemberProfile = async function(groupId,userSaid){
     const listName = await getUsername(getUsers);
     replyCorouselToRoom(groupId,getUsers);
     //<-- End read data part -->
+}
+
+const updateMember = async function(groupId,userId){
+    let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(userId);
+    let transaction = db.runTransaction(t => {
+        return t.get(FindmembersDocumentRef)
+          .then(doc => {
+            // Add one person to the city population.
+            // Note: this could be done without a transaction
+            //       by updating the population using FieldValue.increment()
+            t.update(FindmembersDocumentRef, {role: "Member"});
+            return "UPDATE";
+          });
+      }).then(result => {
+        console.log('Transaction success!');
+        return "OK2";
+      }).catch(err => {
+        console.log('Transaction failure:', err);
+      });
 }
 
 const createTask = async function(groupId,userSaid){
