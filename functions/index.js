@@ -47,18 +47,14 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             });
             // <--End write data part-->
         }
-        else if(reqMessage === 'มีใครบ้าง'){
+        else if(reqMessage.toLowerCase() === 'getmember'){
             const groupId = req.body.events[0].source.groupId;
-            const userId = req.body.events[0].source.userId;
-            // <-- Read data from database part -->
-            let membersDocumentRef = db.collection('data').doc(groupId).collection('members');
-            let getUsers = await getUsersData(membersDocumentRef);
-            console.log("getUsers = ",getUsers);
-            const listName = await getUsername(getUsers);
-            replyCorouselToRoom(groupId,getUsers)
-            //replyToRoom(groupId,'มี '+listName);
-            //console.log('ListName = ',listName);
-            //<-- End read data part -->
+            getMembers(groupId,db);
+        }else if(reqMessage.toLowerCase().includes('getmemberprofile')){
+            const userSaid = req.body.events[0].message.text;
+            const groupId = req.body.events[0].source.groupId;
+            getMemberProfile(groupId,userSaid);
+
         }
         // const userSaid = req.body.events[0].message.text.toLowerCase();
         // var splitText = userSaid.split(" ");
@@ -134,7 +130,6 @@ const replyToRoom = (groupId,message) => {
     });
 };
 
-
 const replyCorouselToRoom = (groupId,UsersArray) => {
     return client.pushMessage(groupId, {
         type: 'template',
@@ -159,7 +154,6 @@ const replyCorouselToRoom = (groupId,UsersArray) => {
         }
     });
 };
-
 
 const getUsersData = function(db){
     return db.get()
@@ -200,3 +194,25 @@ const getGroupMemberIds = function(userId) {
 const DeleteUserData = function(db){
     return db.doc("New Sample UserId").delete();
 };
+
+const getMembers = async function(groupId,db){
+    // <-- Read data from database part -->
+    let membersDocumentRef = db.collection('data').doc(groupId).collection('members');
+    let getUsers = await getUsersData(membersDocumentRef);
+    console.log("getUsers = ",getUsers);
+    replyCorouselToRoom(groupId,getUsers);
+    //<-- End read data part -->
+}
+
+const getMemberProfile = async function(groupId,userSaid){
+    var splitText = userSaid.split("@");
+    console.log("splitText = ",splitText);
+    // <-- Read data from database part -->
+    let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',splitText[1].trim());
+    let getUsers = await getUsersData(FindmembersDocumentRef);
+    console.log("getUsers = ",getUsers);
+    const listName = await getUsername(getUsers);
+    replyCorouselToRoom(groupId,getUsers);
+    //<-- End read data part -->
+}
+
