@@ -69,27 +69,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const userId = req.body.events[0].source.userId;
             updateMember(groupId,userId);
         }
-        // const userSaid = req.body.events[0].message.text.toLowerCase();
-        // var splitText = userSaid.split(" ");
-        // if(splitText[0] === "#create"){
-        //     //do something
-        //     const taskTitle = splitText[1];
-        //     console.log("taskTitle = ", taskTitle);
-        //     //Check whether there is '@'
-        //     if(splitText[2] !== undefined){
-        //         if(splitText[2].contains("@")){
-        //             var splitText2 = splitText[2].split("@");
-        //             console.log("SplitText2 = ", splitText2);
-        //             var assignedUser = splitText2[1];
-        //             console.log("assignedUser = ", assignedUser);
-        //         }
-        //         else{
-        //             reply(replyToken,'Wrong command');
-        //         }
-        //     }
-        // }else if(splitText[0] === "#display"){
-        //     //send picture attached with liff link
-        // }
     }else if(reqType === 'join'){
         const groupId = req.body.events[0].source.groupId;
         console.log('join');
@@ -109,25 +88,39 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
         console.log(welComeMsg);
         replyToRoom(groupId,welComeMsg);
+    }else if(reqType === 'postback'){
+      const postbackData = req.body.events[0].postback.data;
+      if(postbackData === 'confirm'){
+        const groupId = req.body.events[0].source.groupId;
+        const userId = req.body.events[0].source.userId;
+        const userProfile = await getUserProfileById(userId);
+        const welComeMsg = `คุณ ${userProfile.displayName} เข้าร่วมการใช้งานแล้ว`;
+        console.log(welComeMsg);
+        replyToRoom(groupId,welComeMsg);
+        // <---Write data part-->
+        dataOneDocumentRef.doc(groupId).collection('members').doc(userId).set({
+            displayName: userProfile.displayName,
+            pictureUrl: userProfile.pictureUrl,
+            role: "Member"
+        })
+        .then(function() {
+            console.log("Document successfully written!");
+            return "OK";
+        })
+        .catch(function(error) {
+            console.error("Error writing document: ", error);
+        });
+        // <--End write data part-->
+      }else if(postbackData.includes('Make admin')){
+        const groupId = req.body.events[0].source.groupId;
+        const splitText = postbackData.split(" ");
+        setAdmin(groupId,splitText);
+
       }
 
 //Call delete data function
 //DeleteUserData(userOneDocumentRef);
 });
-
-// const setMemberData = function(db, displayName,pictureUrl){
-//     return db.set({
-//         displayName: displayName,
-//         pictureUrl: pictureUrl,
-//         role: "Admin"
-//     }).then(function() {
-//         console.log("Member document successfully written!");
-//         return "OK";
-//     })
-//     .catch(function(error) {
-//         console.error("Error member document writing document: ", error);
-//     });
-// };
 
 const reply = (replyToken,message) => {
     return client.replyMessage(replyToken, {
@@ -157,9 +150,9 @@ const replyCorouselToRoom = (groupId,UsersArray) => {
               text: member.role,
               actions: [
                 {
-                  type: "message",
-                  label: "Action 1",
-                  text: "Action 1"
+                  type: "postback",
+                  label: "Make admin",
+                  data: `Make admin ${member.displayName}`
                 }
               ]
             }
@@ -324,4 +317,32 @@ const getTask = async function(groupId){
     console.log("getTasks = ",getTasks);
     replyTaskCorouselToRoom(groupId,getTasks);
     //<-- End read data part -->
+}
+
+const getTaskDetail = async function(groupId,userSaid){
+  var splitText = userSaid.split(" ");
+  console.log("splitText = ",splitText);
+  // <-- Read data from database part -->
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',splitText[1]);
+  let getTask = await getUsersData(FindtasksDocumentRef);
+  console.log("getTask = ",getTask);
+  replyTaskCorouselToRoom(groupId,getTask);
+  //<-- End read data part -->
+}
+
+const setAdmin = async function(groupId, splitText){
+  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',splitText[2].trim());
+  FindmembersDocumentRef.get().then(function(querySnapshot) {
+    querySnapshot.forEach(function(doc) {
+        console.log(doc.id, " => ", doc.data());
+        // Build doc ref from doc.id
+        db.collection("data").doc(groupId).collection('members').doc(doc.id).update({role: "Admin"});
+    });
+      return "Updated";
+  }).then(result => {
+    console.log('Transaction success!');
+    return "OK2";
+  }).catch(err => {
+    console.log('Transaction failure:', err);
+  });
 }
