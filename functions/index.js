@@ -143,7 +143,7 @@ const replyCorouselToRoom = (groupId,UsersArray) => {
                 {
                   type: "postback",
                   label: "Make admin",
-                  data: `Make admin ${member.displayName}`
+                  data: `Make admin ${member.userId}`
                 }
               ]
             }
@@ -202,7 +202,13 @@ const getUsersData = function(db){
         snapshot.forEach(doc => {
         const data = doc.data();
           console.log(doc.id, '=>', data);
-          UsersArray.push(data);
+
+          UsersArray.push({
+            userId:doc.id,
+            displayName: data.displayName,
+            pictureUrl: data.pictureUrl,
+            role: data.role
+          });
         });
 
         return UsersArray;
@@ -270,7 +276,7 @@ const getMemberProfile = async function(groupId,userSaid,bool){
     return writeTask;
 }
 
-const updateMember = async function(groupId,userId){
+const updateMember = function(groupId,userId){
   let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(userId);
   let transaction = db.runTransaction(t => {
       return t.get(FindmembersDocumentRef)
@@ -355,15 +361,9 @@ const getTaskDetail = async function(groupId,userSaid){
 }
 
 const setAdmin = async function(groupId, splitText){
-  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',splitText[2].trim());
-  FindmembersDocumentRef.get().then(function(querySnapshot) {
-    querySnapshot.forEach(function(doc) {
-        console.log(doc.id, " => ", doc.data());
-        // Build doc ref from doc.id
-        db.collection("data").doc(groupId).collection('members').doc(doc.id).update({role: "Admin"});
-    });
-      return "Updated";
-  }).then(result => {
+  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(splitText[2]);
+  FindmembersDocumentRef.update({role: "Admin"})
+  .then(result => {
     console.log('Transaction success!');
     return "OK2";
   }).catch(err => {
