@@ -98,9 +98,10 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         - #display เพื่อให้บอทแสดง task list ของวันนี้`;
         console.log(welComeMsg);
         replyToRoom(groupId,welComeMsg);
-        console.log(groupId);
-        const memberIds = await getGroupMemberIds(groupId);
-        console.log(memberIds);
+        //console.log(groupId);
+        replyConfirmButton(groupId);
+        // const memberIds = await getGroupMemberIds(groupId);
+        // console.log(memberIds);
     }else if(reqType === 'memberJoined'){
         const userId = req.body.events[0].joined.members[0].userId;
         const groupId = req.body.events[0].source.groupId;
