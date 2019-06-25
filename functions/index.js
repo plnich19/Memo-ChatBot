@@ -286,7 +286,7 @@ const getMemberProfile = async function(groupId,userSaid,bool){
     
     if(isEmpty(getUsers)){
         writeTask = false;
-        const replyMsg = `ขออภัยคุณ${splitText[1]} ยังไม่ได้เปิดการใช้งานบอท คุณ${splitText[1]}โปรดยืนยันตัวตนก่อนนะคะ`;
+        const replyMsg = `ขออภัยคุณ${splitText[1]}ยังไม่ได้เปิดการใช้งานบอท คุณ${splitText[1]}โปรดยืนยันตัวตนก่อนนะคะ`;
         replyToRoom(groupId, replyMsg);
         replyConfirmButton(groupId);
     }
