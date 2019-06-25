@@ -304,6 +304,25 @@ const getMemberProfile = async function(groupId,userSaid,bool){
     return writeTask;
 }
 
+const updateMember = async function(groupId,userId){
+  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(userId);
+  let transaction = db.runTransaction(t => {
+      return t.get(FindmembersDocumentRef)
+        .then(doc => {
+          // Add one person to the city population.
+          // Note: this could be done without a transaction
+          //       by updating the population using FieldValue.increment()
+          t.update(FindmembersDocumentRef, {role: "Member"});
+          return "UPDATE";
+        });
+    }).then(result => {
+      console.log('Transaction success!');
+      return "OK2";
+    }).catch(err => {
+      console.log('Transaction failure:', err);
+    });
+}
+
 const createTask = async function(groupId,userSaid){
     var splitText = userSaid.split(" ");
     console.log("SplitText = ", splitText);
@@ -368,3 +387,4 @@ const getTaskDetail = async function(groupId,userSaid){
   replyTaskCorouselToRoom(groupId,getTask);
   //<-- End read data part -->
 }
+
