@@ -193,6 +193,25 @@ const replyTaskCorouselToRoom = (groupId,TasksArray) => {
     });
 };
 
+const replyConfirmButton = (groupId) =>{
+  return client.pushMessage(groupId, {
+      type: "template",
+      altText: "this is a buttons template",
+      template: {
+        type: "buttons",
+        actions: [
+          {
+            type: "postback",
+            label: "ตกลง",
+            data: "confirm"
+          }
+        ],
+        title: "ยืนยันการใช้งาน",
+        text: "คลิกตกลงเพื่อยืนยันตัวตนนะคะ"
+      } 
+  });
+};
+
 const getUsersData = function(db){
     return db.get()
     .then (snapshot => {
