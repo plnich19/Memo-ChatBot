@@ -34,8 +34,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const writeTask = await getMemberProfile(groupId,userSaid,true);
             console.log("WriteTask = ", writeTask);
         }else if(reqMessage.toLowerCase().includes('create')){
-            const userSaid = req.body.events[0].message.text;
-            const groupId = req.body.events[0].source.groupId;
             if(reqMessage.toLowerCase().includes('@')){
               const userSaid = req.body.events[0].message.text;
               const groupId = req.body.events[0].source.groupId;
