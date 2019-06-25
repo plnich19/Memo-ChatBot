@@ -173,7 +173,7 @@ const replyCorouselToRoom = (groupId,UsersArray) => {
               thumbnailImageUrl: member.pictureUrl,
               title: member.displayName,
               text: member.role,
-              actions: [z
+              actions: [
                 {
                   type: "message",
                   label: "Action 1",
