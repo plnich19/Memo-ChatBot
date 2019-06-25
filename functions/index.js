@@ -33,7 +33,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const groupId = req.body.events[0].source.groupId;
             const writeTask = await getMemberProfile(groupId,userSaid,true);
             console.log("WriteTask = ", writeTask);
-        }else if(reqMessage.toLowerCase().includes('create')){
+        }else if(reqMessage.toLowerCase().includes('#create')){
             if(reqMessage.toLowerCase().includes('@')){
               const userSaid = req.body.events[0].message.text;
               const groupId = req.body.events[0].source.groupId;
@@ -45,7 +45,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               }
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
-            //const userSaid = req.body.events[0].message.text;
             const groupId = req.body.events[0].source.groupId;
             updateTask(groupId);
         }else if(reqMessage.toLowerCase() === 'gettask'){
