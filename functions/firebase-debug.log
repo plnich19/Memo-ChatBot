@@ -1,0 +1,14 @@
+[debug] [2019-06-25T08:31:33.246Z] ----------------------------------------------------------------------
+[debug] [2019-06-25T08:31:33.248Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\ployu\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions:Chatbot
+[debug] [2019-06-25T08:31:33.249Z] CLI Version:   7.0.1
+[debug] [2019-06-25T08:31:33.249Z] Platform:      win32
+[debug] [2019-06-25T08:31:33.249Z] Node Version:  v10.16.0
+[debug] [2019-06-25T08:31:33.249Z] Time:          Tue Jun 25 2019 15:31:33 GMT+0700 (Indochina Time)
+[debug] [2019-06-25T08:31:33.249Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2019-06-25T08:31:33.261Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2019-06-25T08:31:33.262Z] > authorizing via signed-in user
+[debug] [2019-06-25T08:31:33.262Z] [iam] checking project memo-chatbot for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2019-06-25T08:31:33.264Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/memo-chatbot:testIamPermissions  
+
+[debug] [2019-06-25T08:31:34.623Z] <<< HTTP RESPONSE 200
