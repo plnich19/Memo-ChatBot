@@ -60,27 +60,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
           const groupId = req.body.events[0].source.groupId;
           getTaskDetail(groupId,userSaid);
       }
-        // const userSaid = req.body.events[0].message.text.toLowerCase();
-        // var splitText = userSaid.split(" ");
-        // if(splitText[0] === "#create"){
-        //     //do something
-        //     const taskTitle = splitText[1];
-        //     console.log("taskTitle = ", taskTitle);
-        //     //Check whether there is '@'
-        //     if(splitText[2] !== undefined){
-        //         if(splitText[2].contains("@")){
-        //             var splitText2 = splitText[2].split("@");
-        //             console.log("SplitText2 = ", splitText2);
-        //             var assignedUser = splitText2[1];
-        //             console.log("assignedUser = ", assignedUser);
-        //         }
-        //         else{
-        //             reply(replyToken,'Wrong command');
-        //         }
-        //     }
-        // }else if(splitText[0] === "#display"){
-        //     //send picture attached with liff link
-        // }
     }else if(reqType === 'join'){
         const groupId = req.body.events[0].source.groupId;
         console.log('join');
@@ -130,20 +109,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
 //Call delete data function
 //DeleteUserData(userOneDocumentRef);
 });
-
-// const setMemberData = function(db, displayName,pictureUrl){
-//     return db.set({
-//         displayName: displayName,
-//         pictureUrl: pictureUrl,
-//         role: "Admin"
-//     }).then(function() {
-//         console.log("Member document successfully written!");
-//         return "OK";
-//     })
-//     .catch(function(error) {
-//         console.error("Error member document writing document: ", error);
-//     });
-// };
 
 const reply = (replyToken,message) => {
     return client.replyMessage(replyToken, {
