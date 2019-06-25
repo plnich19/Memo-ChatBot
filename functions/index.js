@@ -27,7 +27,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const reqMessage = req.body.events[0].message.text;
         if(reqMessage.toLowerCase() === 'getmember'){
             const groupId = req.body.events[0].source.groupId;
-            getMembers(groupId,db);
+            getMembers(groupId);
         }else if(reqMessage.toLowerCase().includes('getmemberprofile')){
             const userSaid = req.body.events[0].message.text;
             const groupId = req.body.events[0].source.groupId;
