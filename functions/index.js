@@ -243,6 +243,20 @@ const getUsersData = function(db){
     })
 };
 
+const getUserProfileById = function(userId) {
+  return client.getProfile(userId)
+          .catch((err) => {
+          console.log('getUserProfile err',err);
+          });
+};
+
+const getGroupMemberIds = function(userId) {
+  return client.getGroupMemberIds(userId)
+          .catch((err) => {
+          console.log('getGroupMemberIds err',err);
+          });
+};
+
 const DeleteUserData = function(db){
     return db.doc("New Sample UserId").delete();
 };
