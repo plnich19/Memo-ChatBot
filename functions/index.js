@@ -42,6 +42,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               if(writeTask === true){
                 createTask(groupId,userSaid,dataOneDocumentRef);
                 replyToRoom(groupId,'สร้าง task ให้เรียบร้อยแล้วน้า');
+                replyToRoom(groupId,'เลือกเวลาไหม');
               }
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
@@ -105,6 +106,11 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split(" ");
         setAdmin(groupId,splitText);
+      }else if(postbackData.includes('TaskId=')){
+        const groupId = req.body.events[0].source.groupId;
+        const splitText = postbackData.split("=");
+        const datetime = req.body.events[0].postback.params.datetime;
+        updateTime(groupId,splitText[1],datetime);
       }
     }
 
@@ -112,6 +118,12 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
 //Call delete data function
 //DeleteUserData(userOneDocumentRef);
 });
+
+//Export new api function
+// exports.appAPI = functions.region('asia-east2').https.onRequest(async (req, res) => {
+//   if(req.actions === "getmember"){
+
+// }
 
 const reply = (replyToken,message) => {
     return client.replyMessage(replyToken, {
@@ -195,6 +207,34 @@ const replyConfirmButton = (groupId) =>{
   });
 };
 
+const replyDatePicker = (groupId,TaskId) => {
+  return client.pushMessage(groupId, {
+    "type": "template",
+    "altText": "This is a buttons template",
+    "template": {
+        "type": "buttons",
+        "title": "เลือกวันที่",
+        "text": "เลือกวันจาก datepicker ได้เลย",
+        "actions": [
+          {  
+            "type":"datetimepicker",
+            "label":"เลือกวันเวลา",
+            "data":`TaskId=${TaskId}`,
+            "mode":"datetime",
+            "initial":"2017-12-25t00:00",
+            "max":"2018-01-24t23:59",
+            "min":"2017-12-25t00:00"
+         },
+        {
+          "type": "postback",
+          "label": "Cancle",
+          "data": "action=add&itemid=123"
+        },
+        ]
+    }
+  });
+};
+
 const getUsersData = function(db){
     return db.get()
     .then (snapshot => {
@@ -213,6 +253,26 @@ const getUsersData = function(db){
 
         return UsersArray;
     })
+};
+
+const getTasksData = function(db){
+  return db.get()
+  .then (snapshot => {
+      let TasksArray = [];
+      snapshot.forEach(doc => {
+      const data = doc.data();
+        console.log(doc.id, '=>', data);
+
+        TasksArray.push({
+          TaskId:doc.id,
+          title: data.title,
+          status: data.status,
+          assignee: data.assignee
+        });
+      });
+
+      return TasksArray;
+  })
 };
 
 const getUserProfileById = function(userId) {
@@ -309,10 +369,19 @@ const createTask = async function(groupId,userSaid){
      tasksDocumentRef.add({
         title: splitText[1],
         status: "NOT DONE",
-        assignee: "some ID"
+        assignee: "some ID",
+        datetime: ""
     })
-    .then(function() {
+    .then(async function() {
         console.log("Task successfully written!");
+        let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',splitText[1]);
+        let getTask = await getTasksData(FindtasksDocumentRef);
+        console.log("getTask = ",getTask);
+        // let TaskId = await UsersArray.map((task) => {
+        //   return task.TaskId;
+        // });
+        console.log("taskId = ", getTask[0].TaskId);
+        replyDatePicker(groupId,getTask[0].TaskId);
         return "OK";
     })
     .catch(function(error) {
@@ -321,15 +390,15 @@ const createTask = async function(groupId,userSaid){
     // <--End write data part-->
 }
 
-const updateTask = async function(groupId){
-    let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc('YuqCbuRs8mKH6HHmFaWa');
+const updateTask = async function(groupId,TaskId,){
+    let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
     let transaction = db.runTransaction(t => {
         return t.get(FindtasksDocumentRef)
           .then(doc => {
             // Add one person to the city population.
             // Note: this could be done without a transaction
             //       by updating the population using FieldValue.increment()
-            t.update(FindtasksDocumentRef, {status: "DONE"});
+            t.update(FindtasksDocumentRef, {date: "DONE"});
             return "UPDATE";
           });
       }).then(result => {
@@ -340,10 +409,29 @@ const updateTask = async function(groupId){
       });
 }
 
+const updateTime = function(groupId,TaskId,datetime){
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
+  let transaction = db.runTransaction(t => {
+      return t.get(FindtasksDocumentRef)
+        .then(doc => {
+          // Add one person to the city population.
+          // Note: this could be done without a transaction
+          //       by updating the population using FieldValue.increment()
+          t.update(FindtasksDocumentRef, {datetime: datetime});
+          return "UPDATE";
+        });
+    }).then(result => {
+      console.log('Transaction success!');
+      return "OK2";
+    }).catch(err => {
+      console.log('Transaction failure:', err);
+    });
+}
+
 const getTask = async function(groupId){
     // <-- Read data from database part -->
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
-    let getTasks = await getUsersData(tasksDocumentRef);
+    let getTasks = await getTasksData(tasksDocumentRef);
     console.log("getTasks = ",getTasks);
     replyTaskCorouselToRoom(groupId,getTasks);
     //<-- End read data part -->
@@ -354,7 +442,7 @@ const getTaskDetail = async function(groupId,userSaid){
   console.log("splitText = ",splitText);
   // <-- Read data from database part -->
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',splitText[1]);
-  let getTask = await getUsersData(FindtasksDocumentRef);
+  let getTask = await getTasksData(FindtasksDocumentRef);
   console.log("getTask = ",getTask);
   replyTaskCorouselToRoom(groupId,getTask);
   //<-- End read data part -->
