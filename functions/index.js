@@ -40,7 +40,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               const writeTask = await getMemberProfile(groupId,userSaid,false);
               if(writeTask === true){
                 createTask(groupId,userSaid,dataOneDocumentRef);
-                replyToRoom(groupId,'สร้าง task ให้เรียบร้อยแล้วน้า');
+                reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
               }
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
