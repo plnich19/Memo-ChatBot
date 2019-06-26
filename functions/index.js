@@ -32,12 +32,12 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         }else if(reqMessage.toLowerCase().includes('getmemberprofile')){
             const userSaid = req.body.events[0].message.text;
             const groupId = req.body.events[0].source.groupId;
-            const writeTask = await getMemberProfile(groupId,userSaid,true);
+            const writeTask = await getMemberProfile(replyToken,groupId,userSaid,true);
         }else if(reqMessage.toLowerCase().includes('#create')){
             if(reqMessage.toLowerCase().includes('@')){
               const userSaid = req.body.events[0].message.text;
               const groupId = req.body.events[0].source.groupId;
-              const writeTask = await getMemberProfile(groupId,userSaid,false);
+              const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
               if(writeTask === true){
                 createTask(groupId,userSaid,dataOneDocumentRef);
                 reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
@@ -354,7 +354,7 @@ const getMembers = async function(groupId){
     //<-- End read data part -->
 }
 
-const getMemberProfile = async function(groupId,userSaid,bool){
+const getMemberProfile = async function(replyToken,groupId,userSaid,bool){
   var writeTask = true;
   const isEmpty = function(obj) {
     for(var key in obj) {
@@ -373,7 +373,7 @@ const getMemberProfile = async function(groupId,userSaid,bool){
     if(isEmpty(getMemberProfile)){
         writeTask = false;
         const replyMsg = `ขออภัยคุณ${userSaidArray[1]}ยังไม่ได้เปิดการใช้งานบอท คุณ${userSaidArray[1]}โปรดยืนยันตัวตนก่อนนะคะ`;
-        replyToRoom(groupId, replyMsg);
+        reply(replyToken, replyMsg);
         replyConfirmButton(groupId);
     }
     else{
@@ -504,16 +504,6 @@ const getTaskDetail = async function(groupId,userSaid){
   replyTaskCorouselToRoom(groupId,getTaskDetail);
   //<-- End read data part -->
 }
-
-// const getTaskDetailbyId = async function(groupId,TaskId){
-//   // <-- Read data from database part -->
-//   console.log("taskId = ", TaskId);
-//   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
-//   let getTask = await getTasksData(FindtasksDocumentRef);
-//   console.log("getTask = ",getTask);
-//   replyTaskCorouselToRoom(groupId,getTask);
-//   //<-- End read data part -->
-// }
 
 const setAdmin = async function(groupId, splitText){
   let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(splitText[2]);
