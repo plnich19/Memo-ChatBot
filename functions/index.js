@@ -39,9 +39,15 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               const groupId = req.body.events[0].source.groupId;
               const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
               if(writeTask === true){
-                createTask(groupId,userSaid,dataOneDocumentRef);
+                createTask(groupId,userSaid,true);
                 reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
               }
+            }
+            else{
+              const userSaid = req.body.events[0].message.text;
+              const groupId = req.body.events[0].source.groupId;
+              createTask(groupId,userSaid,false);
+              reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
             const groupId = req.body.events[0].source.groupId;
@@ -63,7 +69,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const groupId = req.body.events[0].source.groupId;
         const welComeMsg = `ขอบคุณที่ลากบอทเข้ากรุ๊ป ท่านสามารถใช้คำสั่งได้ดังนี้ 
         - #Create new_task_name @name เพื่อสร้าง task ใหม่ หรือจะแค่ #Create new_task_name ก็ได้ 
-        - #display เพื่อให้บอทแสดง task list ของวันนี้`;
+        - #display เพื่อให้บอทแสดง task list ของวันนี้ แก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะ`;
         replyToRoom(groupId,welComeMsg);
         replyConfirmButton(groupId);
         // const memberIds = await getGroupMemberIds(groupId);
@@ -407,18 +413,19 @@ const updateMember = function(groupId,userId){
     });
 }
 
-const createTask = async function(groupId,userSaid){
+const createTask = async function(groupId,userSaid,bool){
+    var assigneeId = "";
     var userSaidArray = userSaid.split(" ");
     console.log("(creatTask) UserSaidArray = ", userSaidArray);
-    var assigneeArray = userSaidArray[2].split("@");
-    var assigneeName = assigneeArray[1];
-    console.log("assigneeName = ", assigneeName);
-    
-    let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
-    let getAssigneeData = await getUsersData(FindmembersDocumentRef);
-    console.log("getAssigneeData = ",getAssigneeData);
-    var assigneeId = getAssigneeData[0].userId;
-
+    if(bool){
+      var assigneeArray = userSaidArray[2].split("@");
+      var assigneeName = assigneeArray[1];
+      console.log("assigneeName = ", assigneeName);
+      let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
+      let getAssigneeData = await getUsersData(FindmembersDocumentRef);
+      console.log("getAssigneeData = ",getAssigneeData);
+      assigneeId = getAssigneeData[0].userId;
+    }
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
      // <---Write data part-->
      tasksDocumentRef.add({
@@ -428,11 +435,12 @@ const createTask = async function(groupId,userSaid){
         datetime: "",
         createtime: Date.now()
     })
-    .then(function() {
+    .then(async function() {
         console.log("Task successfully written!");
         let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
         let getTask = await getTasksData(FindtasksDocumentRef);
         console.log("taskId = ", getTask[0].TaskId);
+        replyToRoom(groupId,'เลือกเวลาไหม? ไม่เลือกก็ได้นะ');
         replyDatePicker(groupId,getTask[0].TaskId);
         return "OK";
     })
@@ -471,13 +479,10 @@ const updateTime = function(groupId,TaskId,datetime){
           //       by updating the population using FieldValue.increment()
           t.update(FindtasksDocumentRef, {datetime: datetime});
           return "UPDATE";
-        }).then(res =>{
-          replyToRoom(groupId,'อะ ลิสต์ล่าสุดจ้า');
-          getTask(groupId);
-          return "OK";
-        })
+        });
     }).then(result => {
-      
+      replyToRoom(groupId,'อะ ลิสต์ล่าสุดจ้า');
+      getTask(groupId);
       console.log('Transaction success!');
       return "OK2";
     }).catch(err => {
@@ -488,7 +493,7 @@ const updateTime = function(groupId,TaskId,datetime){
 const getTask = async function(groupId){
     // <-- Read data from database part -->
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
-    let getTasks = await getUsersData(tasksDocumentRef);
+    let getTasks = await getTasksData(tasksDocumentRef);
     console.log("getTasks = ",getTasks);
     replyTaskCorouselToRoom(groupId,getTasks);
     //<-- End read data part -->
