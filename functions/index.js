@@ -100,6 +100,11 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split(" ");
         setAdmin(groupId,splitText);
+      }else if(postbackData.includes('TaskId=')){
+        const groupId = req.body.events[0].source.groupId;
+        const splitText = postbackData.split("=");
+        const datetime = req.body.events[0].postback.params.datetime;
+        updateTime(groupId,splitText[1],datetime);
       }
     }
 
