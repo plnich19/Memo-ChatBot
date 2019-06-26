@@ -3,9 +3,10 @@ const serviceAccount = require("./serviceAccountKey.json");
 const functions = require('firebase-functions');
 const line = require('@line/bot-sdk');
 
+
 const config = {
-    channelAccessToken: 'j1ZDRGvmUdh+wz1Dtqry9xgTTotKfzRAsckUy89mZl7aGgm4dSP8eNwhz7UCYt6X6Xei5pz17m+fB+TgVRyilu9rl0Dk7dvtzroqrwGysAJV+RAO6DeFvn8YZL6jT2G9A9HBWND0SvlxD/AEzUoSr1GUYhWQfeY8sLGRXgo3xvw=',
-    channelSecret: 'afc9b2ce41f4c642a1c3c3d3700dd395'
+    channelAccessToken: 'HTK6RpxiRFtlIMDl7s+Klz4WEGz8r0GInSc6ms02dPpWwugI73tRSd/hoKAunXm6KFGBsEVpeTsdwxu9AIRxFaMB+VhJiiKYPEY9Bd3vDP5qYK8X/P1lT/N+kvq01BDfK+ZP7LFniduqFxcRhZgL8AdB04t89/1O/w1cDnyilFU=',
+    channelSecret: '3e2bbc2929bf520a6724d65449b6b345'
 };
 
 // create LINE SDK client
@@ -32,13 +33,11 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const userSaid = req.body.events[0].message.text;
             const groupId = req.body.events[0].source.groupId;
             const writeTask = await getMemberProfile(groupId,userSaid,true);
-            console.log("WriteTask = ", writeTask);
         }else if(reqMessage.toLowerCase().includes('#create')){
             if(reqMessage.toLowerCase().includes('@')){
               const userSaid = req.body.events[0].message.text;
               const groupId = req.body.events[0].source.groupId;
               const writeTask = await getMemberProfile(groupId,userSaid,false);
-              console.log("WriteTask = ", writeTask);
               if(writeTask === true){
                 createTask(groupId,userSaid,dataOneDocumentRef);
                 replyToRoom(groupId,'สร้าง task ให้เรียบร้อยแล้วน้า');
@@ -47,9 +46,10 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         }else if(reqMessage.toLowerCase() === 'updatetask'){
             const groupId = req.body.events[0].source.groupId;
             updateTask(groupId);
-        }else if(reqMessage.toLowerCase() === 'gettask'){
-            const groupId = req.body.events[0].source.groupId;
-            getTask(groupId);
+        }else if(reqMessage.toLowerCase() === 'gettask' || reqMessage.toLowerCase() === '#display'){
+            // const groupId = req.body.events[0].source.groupId;
+            // getTask(groupId);
+            replayLiff(replyToken);
         }else if(reqMessage.toLowerCase() === 'updatemember'){
             const groupId = req.body.events[0].source.groupId;
             const userId = req.body.events[0].source.userId;
@@ -61,11 +61,9 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
       }
     }else if(reqType === 'join'){
         const groupId = req.body.events[0].source.groupId;
-        console.log('join');
         const welComeMsg = `ขอบคุณที่ลากบอทเข้ากรุ๊ป ท่านสามารถใช้คำสั่งได้ดังนี้ 
         - #Create new_task_name @name เพื่อสร้าง task ใหม่ หรือจะแค่ #Create new_task_name ก็ได้ 
         - #display เพื่อให้บอทแสดง task list ของวันนี้`;
-        console.log(welComeMsg);
         replyToRoom(groupId,welComeMsg);
         replyConfirmButton(groupId);
         // const memberIds = await getGroupMemberIds(groupId);
@@ -73,10 +71,8 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
     }else if(reqType === 'memberJoined'){
         const userId = req.body.events[0].joined.members[0].userId;
         const groupId = req.body.events[0].source.groupId;
-        console.log('memberJoined');
         const userProfile = await getUserProfileById(userId);
         const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
-        console.log(welComeMsg);
         replyToRoom(groupId,welComeMsg);
     }else if(reqType === 'postback'){
       const postbackData = req.body.events[0].postback.data;
@@ -85,7 +81,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const userId = req.body.events[0].source.userId;
         const userProfile = await getUserProfileById(userId);
         const welComeMsg = `คุณ ${userProfile.displayName} เข้าร่วมการใช้งานแล้ว`;
-        console.log(welComeMsg);
         replyToRoom(groupId,welComeMsg);
         // <---Write data part-->
         dataOneDocumentRef.doc(groupId).collection('members').doc(userId).set({
@@ -94,7 +89,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             role: "Member"
         })
         .then(function() {
-            console.log("Document successfully written!");
+            console.log("User successfully written!");
             return "OK";
         })
         .catch(function(error) {
@@ -162,7 +157,7 @@ const replyTaskCorouselToRoom = (groupId,TasksArray) => {
           columns: TasksArray.map((task) => {
             return {
               title: task.title,
-              text: task.status,
+              text: `Status: ${task.status} Date: ${task.datetime}`,
               actions: [
                 {
                   type: "message",
@@ -195,13 +190,103 @@ const replyConfirmButton = (groupId) =>{
   });
 };
 
+const replyDatePicker = (groupId,TaskId) => {
+  return client.pushMessage(groupId, {
+    "type": "template",
+    "altText": "This is a buttons template",
+    "template": {
+        "type": "buttons",
+        "title": "เลือกวันที่",
+        "text": "เลือกวันจาก datepicker ได้เลย",
+        "actions": [
+          {  
+            "type":"datetimepicker",
+            "label":"เลือกวันเวลา",
+            "data":`TaskId=${TaskId}`,
+            "mode":"datetime",
+            "initial":"2017-12-25t00:00",
+            "max":"2018-01-24t23:59",
+            "min":"2017-12-25t00:00"
+         },
+        {
+          "type": "postback",
+          "label": "Cancle",
+          "data": "action=add&itemid=123"
+        },
+        ]
+    }
+  });
+};
+
+const replayLiff = (replyToken) => {
+  return client.replyMessage(replyToken, {
+    "type": "flex",
+    "altText": "Flex Message",
+    "contents": {
+      "type": "bubble",
+      "body": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "margin": "lg",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "baseline",
+                "spacing": "sm",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "กดดูลิสต์ข้างล่างได้เลย!",
+                    "flex": 5,
+                    "size": "sm",
+                    "color": "#666666",
+                    "wrap": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "flex": 0,
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "button",
+            "action": {
+              "type": "uri",
+              "label": "Task list",
+              "uri": "line://app/1568521906-qP1vaA4y"
+            },
+            "height": "sm",
+            "style": "link"
+          },
+          {
+            "type": "spacer",
+            "size": "sm"
+          }
+        ]
+      }
+    }
+  });
+};
+
+
 const getUsersData = function(db){
     return db.get()
     .then (snapshot => {
         let UsersArray = [];
         snapshot.forEach(doc => {
         const data = doc.data();
-          console.log(doc.id, '=>', data);
+          console.log('getUsersData = ',doc.id, '=>', data);
 
           UsersArray.push({
             userId:doc.id,
@@ -213,6 +298,28 @@ const getUsersData = function(db){
 
         return UsersArray;
     })
+};
+
+const getTasksData = function(db){
+  return db.get()
+  .then (snapshot => {
+      let TasksArray = [];
+      snapshot.forEach(doc => {
+      const data = doc.data();
+        console.log('getTasksData = ',doc.id, '=>', data);
+
+        TasksArray.push({
+          TaskId:doc.id,
+          title: data.title,
+          status: data.status,
+          assignee: data.assignee,
+          datetime: data.datetime,
+          createtime: data.createtime
+        });
+      });
+
+      return TasksArray;
+  })
 };
 
 const getUserProfileById = function(userId) {
@@ -237,7 +344,7 @@ const getMembers = async function(groupId){
     // <-- Read data from database part -->
     let membersDocumentRef = db.collection('data').doc(groupId).collection('members');
     let getUsers = await getUsersData(membersDocumentRef);
-    console.log("getUsers = ",getUsers);
+    console.log("(getMembers) getUsers = ",getUsers);
     replyCorouselToRoom(groupId,getUsers);
     //<-- End read data part -->
 }
@@ -251,22 +358,22 @@ const getMemberProfile = async function(groupId,userSaid,bool){
     }
     return true;
   }
-    var splitText = userSaid.split("@");
-    console.log("splitText = ",splitText);
+    var userSaidArray = userSaid.split("@");
+    console.log("(getMemberProfile) userSaidArray = ",userSaidArray);
     // <-- Read data from database part -->
-    let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',splitText[1].trim());
-    let getUsers = await getUsersData(FindmembersDocumentRef);
-    console.log("getUsers = ",getUsers);
+    let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',userSaidArray[1].trim());
+    let getMemberProfile = await getUsersData(FindmembersDocumentRef);
+    console.log("getMemberProfile = ",getMemberProfile);
     
-    if(isEmpty(getUsers)){
+    if(isEmpty(getMemberProfile)){
         writeTask = false;
-        const replyMsg = `ขออภัยคุณ${splitText[1]}ยังไม่ได้เปิดการใช้งานบอท คุณ${splitText[1]}โปรดยืนยันตัวตนก่อนนะคะ`;
+        const replyMsg = `ขออภัยคุณ${userSaidArray[1]}ยังไม่ได้เปิดการใช้งานบอท คุณ${userSaidArray[1]}โปรดยืนยันตัวตนก่อนนะคะ`;
         replyToRoom(groupId, replyMsg);
         replyConfirmButton(groupId);
     }
     else{
       if(bool){
-        replyCorouselToRoom(groupId,getUsers);
+        replyCorouselToRoom(groupId,getMemberProfile);
       }
       else{
         writeTask = true;
@@ -296,23 +403,32 @@ const updateMember = function(groupId,userId){
 }
 
 const createTask = async function(groupId,userSaid){
-    var splitText = userSaid.split(" ");
-    console.log("SplitText = ", splitText);
-    // if(splitText[2] !== undefined && splitText[2].includes('@')){
-    //     var splitTextAgain = splitText[2].split("@");
-    //     console.log("splitTextAgain = ",splitTextAgain);
-    //     getMemberProfile(groupId,splitTextAgain[1]);
-    //     //do something
-    // }
+    var userSaidArray = userSaid.split(" ");
+    console.log("(creatTask) UserSaidArray = ", userSaidArray);
+    var assigneeArray = userSaidArray[2].split("@");
+    var assigneeName = assigneeArray[1];
+    console.log("assigneeName = ", assigneeName);
+    
+    let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
+    let getAssigneeData = await getUsersData(FindmembersDocumentRef);
+    console.log("getAssigneeData = ",getAssigneeData);
+    var assigneeId = getAssigneeData[0].userId;
+
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
      // <---Write data part-->
      tasksDocumentRef.add({
-        title: splitText[1],
+        title: userSaidArray[1],
         status: "NOT DONE",
-        assignee: "some ID"
+        assignee: assigneeId,
+        datetime: "",
+        createtime: Date.now()
     })
     .then(function() {
         console.log("Task successfully written!");
+        let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
+        let getTask = await getTasksData(FindtasksDocumentRef);
+        console.log("taskId = ", getTask[0].TaskId);
+        replyDatePicker(groupId,getTask[0].TaskId);
         return "OK";
     })
     .catch(function(error) {
@@ -340,6 +456,30 @@ const updateTask = async function(groupId){
       });
 }
 
+const updateTime = function(groupId,TaskId,datetime){
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
+  let transaction = db.runTransaction(t => {
+      return t.get(FindtasksDocumentRef)
+        .then(doc => {
+          // Add one person to the city population.
+          // Note: this could be done without a transaction
+          //       by updating the population using FieldValue.increment()
+          t.update(FindtasksDocumentRef, {datetime: datetime});
+          return "UPDATE";
+        }).then(res =>{
+          replyToRoom(groupId,'อะ ลิสต์ล่าสุดจ้า');
+          getTask(groupId);
+          return "OK";
+        })
+    }).then(result => {
+      
+      console.log('Transaction success!');
+      return "OK2";
+    }).catch(err => {
+      console.log('Transaction failure:', err);
+    });
+}
+
 const getTask = async function(groupId){
     // <-- Read data from database part -->
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
@@ -350,15 +490,25 @@ const getTask = async function(groupId){
 }
 
 const getTaskDetail = async function(groupId,userSaid){
-  var splitText = userSaid.split(" ");
-  console.log("splitText = ",splitText);
+  var userSaidArray = userSaid.split(" ");
+  console.log("splitText = ",userSaid);
   // <-- Read data from database part -->
-  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',splitText[1]);
-  let getTask = await getUsersData(FindtasksDocumentRef);
-  console.log("getTask = ",getTask);
-  replyTaskCorouselToRoom(groupId,getTask);
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
+  let getTaskDetail = await getTasksData(FindtasksDocumentRef);
+  console.log("getTaskDetail = ",getTaskDetail);
+  replyTaskCorouselToRoom(groupId,getTaskDetail);
   //<-- End read data part -->
 }
+
+// const getTaskDetailbyId = async function(groupId,TaskId){
+//   // <-- Read data from database part -->
+//   console.log("taskId = ", TaskId);
+//   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
+//   let getTask = await getTasksData(FindtasksDocumentRef);
+//   console.log("getTask = ",getTask);
+//   replyTaskCorouselToRoom(groupId,getTask);
+//   //<-- End read data part -->
+// }
 
 const setAdmin = async function(groupId, splitText){
   let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(splitText[2]);
