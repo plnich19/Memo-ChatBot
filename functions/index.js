@@ -41,14 +41,9 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
               console.log("WriteTask = ", writeTask);
               if(writeTask === true){
-<<<<<<< Updated upstream
-                createTask(groupId,userSaid,dataOneDocumentRef);
-                replyToRoom(groupId,'สร้าง task ให้เรียบร้อยแล้วน้า');
-=======
                 createTask(replyToken,groupId,userSaid);
                 replyToRoom(replyToken,groupId,'สร้าง task ให้เรียบร้อยแล้วน้า');
                 replyToRoom(replyToken,groupId,'เลือกเวลาไหม');
->>>>>>> Stashed changes
               }
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
@@ -112,6 +107,11 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split(" ");
         setAdmin(groupId,splitText);
+      }else if(postbackData.includes('TaskId=')){
+        const groupId = req.body.events[0].source.groupId;
+        const splitText = postbackData.split("=");
+        const datetime = req.body.events[0].postback.params.datetime;
+        updateTime(groupId,splitText[1],datetime);
       }
     }
 
@@ -119,6 +119,12 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
 //Call delete data function
 //DeleteUserData(userOneDocumentRef);
 });
+
+//Export new api function
+// exports.appAPI = functions.region('asia-east2').https.onRequest(async (req, res) => {
+//   if(req.actions === "getmember"){
+
+// }
 
 const reply = (replyToken,message) => {
     return client.replyMessage(replyToken, {
@@ -202,8 +208,6 @@ const replyConfirmButton = (replyToken,groupId) =>{
   });
 };
 
-<<<<<<< Updated upstream
-=======
 const replyDatePicker = (replyToken,groupId,TaskId) => {
   return client.replyMessage(replyToken, {
     type: "template",
@@ -232,7 +236,6 @@ const replyDatePicker = (replyToken,groupId,TaskId) => {
   });
 };
 
->>>>>>> Stashed changes
 const getUsersData = function(db){
     return db.get()
     .then (snapshot => {
@@ -253,8 +256,6 @@ const getUsersData = function(db){
     })
 };
 
-<<<<<<< Updated upstream
-=======
 const getTasksData = function(db){
   return db.get()
   .then (snapshot => {
@@ -277,7 +278,6 @@ const getTasksData = function(db){
   })
 };
 
->>>>>>> Stashed changes
 const getUserProfileById = function(userId) {
   return client.getProfile(userId)
           .catch((err) => {
@@ -372,24 +372,17 @@ const createTask = async function(replyToken,groupId,userSaid){
      tasksDocumentRef.add({
         title: splitText[1],
         status: "NOT DONE",
-<<<<<<< Updated upstream
-        assignee: "some ID"
-=======
         assignee: "some ID",
         datetime: "",
         createtime: ""
->>>>>>> Stashed changes
     })
-    .then(function() {
+    .then(async function() {
         console.log("Task successfully written!");
-<<<<<<< Updated upstream
-=======
         let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',splitText[1]);
         let getTask = await getTasksData(FindtasksDocumentRef);
         console.log("getTask = ",getTask);
         console.log("taskId = ", getTask[0].TaskId);
         replyDatePicker(replyToken,groupId,getTask[0].TaskId);
->>>>>>> Stashed changes
         return "OK";
     })
     .catch(function(error) {
@@ -398,15 +391,15 @@ const createTask = async function(replyToken,groupId,userSaid){
     // <--End write data part-->
 }
 
-const updateTask = async function(groupId){
-    let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc('YuqCbuRs8mKH6HHmFaWa');
+const updateTask = async function(groupId,TaskId,){
+    let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
     let transaction = db.runTransaction(t => {
         return t.get(FindtasksDocumentRef)
           .then(doc => {
             // Add one person to the city population.
             // Note: this could be done without a transaction
             //       by updating the population using FieldValue.increment()
-            t.update(FindtasksDocumentRef, {status: "DONE"});
+            t.update(FindtasksDocumentRef, {date: "DONE"});
             return "UPDATE";
           });
       }).then(result => {
@@ -417,9 +410,6 @@ const updateTask = async function(groupId){
       });
 }
 
-<<<<<<< Updated upstream
-const getTask = async function(groupId){
-=======
 const updateTime = function(groupId,TaskId,datetime){
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
   let transaction = db.runTransaction(t => {
@@ -440,10 +430,9 @@ const updateTime = function(groupId,TaskId,datetime){
 }
 
 const getTask = async function(replyToken,groupId){
->>>>>>> Stashed changes
     // <-- Read data from database part -->
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
-    let getTasks = await getUsersData(tasksDocumentRef);
+    let getTasks = await getTasksData(tasksDocumentRef);
     console.log("getTasks = ",getTasks);
     replyTaskCorouselToRoom(replyToken,getTasks);
     //<-- End read data part -->
@@ -454,7 +443,7 @@ const getTaskDetail = async function(replyToken,groupId,userSaid){
   console.log("splitText = ",splitText);
   // <-- Read data from database part -->
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',splitText[1]);
-  let getTask = await getUsersData(FindtasksDocumentRef);
+  let getTask = await getTasksData(FindtasksDocumentRef);
   console.log("getTask = ",getTask);
   replyTaskCorouselToRoom(replyToken,getTask);
   //<-- End read data part -->
@@ -467,16 +456,4 @@ const getTaskDetailbyId = async function(replyToken,groupId,TaskId){
   let getTask = await getTasksData(FindtasksDocumentRef);
   console.log("getTask = ",getTask);
   replyTaskCorouselToRoom(replyToken,getTask);
-  //<-- End read data part -->
-}
-
-const setAdmin = async function(groupId, splitText){
-  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(splitText[2]);
-  FindmembersDocumentRef.update({role: "Admin"})
-  .then(result => {
-    console.log('Transaction success!');
-    return "OK2";
-  }).catch(err => {
-    console.log('Transaction failure:', err);
-  });
 }
