@@ -414,41 +414,60 @@ const updateMember = function(groupId,userId){
 }
 
 const createTask = async function(groupId,userSaid,bool){
-    var assigneeId = "";
+  var assigneeIdArray = [];
     var userSaidArray = userSaid.split(" ");
     console.log("(creatTask) UserSaidArray = ", userSaidArray);
-    if(bool){
-      var assigneeArray = userSaidArray[2].split("@");
-      var assigneeName = assigneeArray[1];
-      console.log("assigneeName = ", assigneeName);
-      let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
-      let getAssigneeData = await getUsersData(FindmembersDocumentRef);
-      console.log("getAssigneeData = ",getAssigneeData);
-      assigneeId = getAssigneeData[0].userId;
+    const checkAssignee = async function(userSaidArray){
+      var assigneeArray = [];
+      for(i=0;i<userSaidArray.length;i++){
+        console.log(userSaidArray[i]);
+        if(userSaidArray[i].includes('@')){
+          assigneeArray.push(userSaidArray[i]);
+        }
     }
-    let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
-     // <---Write data part-->
-     tasksDocumentRef.add({
-        title: userSaidArray[1],
-        status: "NOT DONE",
-        assignee: assigneeId,
-        datetime: "",
-        createtime: Date.now()
-    })
-    .then(async function() {
-        console.log("Task successfully written!");
-        let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
-        let getTask = await getTasksData(FindtasksDocumentRef);
-        console.log("taskId = ", getTask[0].TaskId);
-        replyToRoom(groupId,'เลือกเวลาไหม? ไม่เลือกก็ได้นะ');
-        replyDatePicker(groupId,getTask[0].TaskId);
-        return "OK";
-    })
-    .catch(function(error) {
-        console.error("Error writing document: ", error);
-    });
+      return assigneeArray;
+    }
+    if(bool){
+      const assigneeArray = await checkAssignee(userSaidArray);
+      console.log(assigneeArray);
+      for(i=0;i<assigneeArray.length;i++){
+        var assigneeName = [];
+        assigneeName.push(assigneeArray[i].split('@')[1]);
+        console.log("assigneeName = ", assigneeName);
+      }
+    //     let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
+    //     let getAssigneeData = getUsersData(FindmembersDocumentRef).then(res =>{
+    //       console.log("getAssigneeData = ",getAssigneeData);
+    //       getAssigneeData.forEach(obj =>{
+    //         assigneeIdArray.push(obj.userId);
+    //         console.log(obj.userId);
+    //     });
+    //     return "Push okay";
+    //     })
+    // }
+    // let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
+    //  // <---Write data part-->
+    //  tasksDocumentRef.add({
+    //     title: userSaidArray[1],
+    //     status: "NOT DONE",
+    //     assignee: assigneeIdArray,
+    //     datetime: "",
+    //     createtime: Date.now()
+    // })
+    // .then(async function() {
+    //     console.log("Task successfully written!");
+    //     let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
+    //     let getTask = await getTasksData(FindtasksDocumentRef);
+    //     console.log("taskId = ", getTask[0].TaskId);
+    //     replyToRoom(groupId,'เลือกเวลาไหม? ไม่เลือกก็ได้นะ');
+    //     replyDatePicker(groupId,getTask[0].TaskId);
+    //     return "OK";
+    // })
+    // .catch(function(error) {
+    //     console.error("Error writing document: ", error);
+    // });
     // <--End write data part-->
-}
+}}
 
 const updateTask = async function(groupId){
     let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc('YuqCbuRs8mKH6HHmFaWa');
