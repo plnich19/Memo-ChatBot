@@ -49,7 +49,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         }else if(reqMessage.toLowerCase() === 'gettask' || reqMessage.toLowerCase() === '#display'){
             // const groupId = req.body.events[0].source.groupId;
             // getTask(groupId);
-            replayLiff(replyToken);
+            replyLiff(replyToken);
         }else if(reqMessage.toLowerCase() === 'updatemember'){
             const groupId = req.body.events[0].source.groupId;
             const userId = req.body.events[0].source.userId;
@@ -223,7 +223,7 @@ const replyDatePicker = (groupId,TaskId) => {
   });
 };
 
-const replayLiff = (replyToken) => {
+const replyLiff = (replyToken) => {
   return client.replyMessage(replyToken, {
     "type": "flex",
     "altText": "Flex Message",
