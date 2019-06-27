@@ -70,6 +70,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         }else if(reqMessage.toLowerCase().includes('#create')){
             if(reqMessage.toLowerCase().includes('@')){
               const userSaid = req.body.events[0].message.text.split('#create')[1];
+              console.log("userSaid = ", userSaid);
               const groupId = req.body.events[0].source.groupId;
               const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
               if(writeTask === true){
@@ -451,12 +452,14 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
   // a = s.split(' ') = ['@ploy,@J']
   // if a[1] !== undefined ? ass
   let assigneeIdArray = [];
-    var userSaidArray = userSaid.split(" ");
-    const checkAssignee = async function(userSaidArray){
+    var userSaidArray = userSaid.split("#to");
+    var userSaidArrayAssignee = userSaid.split("#to")[1].trim();
+    console.log("userSaidArray = ", userSaidArray);
+    const checkAssignee = async function(userSaidArrayAssignee){
       var assigneeArray = [];
       for(i=0;i<userSaidArray.length;i++){
         if(userSaidArray[i].includes('@')){
-          assigneeArray.push(userSaidArray[i]);
+          assigneeArray.push(userSaidArrayAssignee[i]);
         }
     }
       return assigneeArray;
