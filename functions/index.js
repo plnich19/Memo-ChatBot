@@ -446,27 +446,11 @@ const updateMember = function(groupId,userId){
 }
 
 const createTask = async function(replyToken,groupId,userSaid,bool){
-  // t = เทสเทส เทส #to@ploy @J
-  // s = t.split("#to")[1].trim() = '@ploy @J'
-  // a = s.split(' ') = ['@ploy,@J']
-  // if a[1] !== undefined ? ass
   let assigneeIdArray = [];
-    var userSaidArray = userSaid.split("#to");
-    var userSaidAssignee = userSaid.split("#to")[1].trim();
-    var assigneeArray = userSaidAssignee.split(" ");
-    console.log("userSaidArray = ", userSaidArray);
-    console.log("userSaidArrayAssignee = ",userSaidArrayAssignee);
-    const checkAssignee = async function(userSaidArrayAssignee){
-      var assigneeArray = [];
-      for(i=0;i<userSaidArray.length;i++){
-        if(userSaidArray[i].includes('@')){
-          assigneeArray.push(userSaidArrayAssignee[i]);
-        }
-    }
-      return assigneeArray;
-    }
+    var tasktitle = userSaid.split("#to")[0].trim();
+    var AssigneeString = userSaid.split("#to")[1].trim();
+    var assigneeArray = AssigneeString.split(" ");
     if(bool){
-      // const assigneeArray = await checkAssignee(userSaidArrayAssignee);
       var assigneeName = [];
       for(i=0;i<assigneeArray.length;i++){
         assigneeName.push(assigneeArray[i].split('@')[1]);
@@ -496,7 +480,7 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
      // <---Write data part-->
      tasksDocumentRef.add({
-        title: userSaidArray[0],
+        title: tasktitle,
         status: "NOT DONE",
         assignee: assigneeIdArray,
         datetime: "",
@@ -505,8 +489,8 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     .then(async function(result) {
         console.log("Task successfully written!");
         console.log("result.id = ",result.id);
-        let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(result.id);
-        let getTask = await getTasksData(FindtasksDocumentRef);
+        // let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(result.id);
+        // let getTask = await getTasksData(FindtasksDocumentRef);
         replyDatePicker(replyToken,groupId,result.id);
         return "OK";
     })
