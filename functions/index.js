@@ -20,6 +20,11 @@ admin.initializeApp({
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection('data');
 
+exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req, res) => {
+    console.log('req',req);
+    console.log('res',res);
+});
+
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
 
     const reqType = req.body.events[0].type;
