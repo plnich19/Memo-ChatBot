@@ -22,7 +22,34 @@ var dataOneDocumentRef = db.collection('data');
 
 exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req, res) => {
     console.log('req',req);
-    console.log('res',res);
+    console.log('query',req.query);
+    const action = req.query.action;
+    const message = req.query.message;
+    if (action !== undefined ) {
+      if(action === 'fruit'){
+        request({
+          method: `POST`,
+          uri: `https://notify-api.line.me/api/notify`,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer bfGLqBR6AizJRwLORuf70f0UeoNlLrU02JTX5ReCBIr`
+          },
+          body: JSON.stringify({
+            message
+          })
+        }).then(() => {
+          const ret = { message: 'Done' };
+          return res.status(200).send(ret);
+        }).catch((error) => {
+          const ret = { message: `Sending error: ${error}` };
+          return res.status(500).send(ret);
+        });
+      }
+    } else {
+      const ret = { message: 'พัง' };
+      return res.status(400).send(ret);
+    }
+    
 });
 
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
