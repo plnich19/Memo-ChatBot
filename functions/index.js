@@ -40,14 +40,12 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
               if(writeTask === true){
                 createTask(replyToken,groupId,userSaid,true);
-                reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
               }
             }
             else{
               const userSaid = req.body.events[0].message.text;
               const groupId = req.body.events[0].source.groupId;
               createTask(replyToken,groupId,userSaid,false);
-              reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
             const groupId = req.body.events[0].source.groupId;
@@ -208,11 +206,11 @@ const replyDatePicker = (replyToken,groupId,TaskId) => {
     "template": {
         "type": "buttons",
         "title": "เลือกวันที่เวลา",
-        "text": "เลือกวันจาก datepicker ได้เลย",
+        "text": "เลือกวัน deadline ไหม? ไม่เลือกก็ได้นะ",
         "actions": [
           {  
             "type":"datetimepicker",
-            "label":"เลือกวันเวลาเดดไลน์ไหม? ไม่เลือกก็ได้นะ",
+            "label":"เลือกวันเวลา",
             "data":`TaskId=${TaskId}`,
             "mode":"datetime",
             "initial":"2017-12-25t00:00",
