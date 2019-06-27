@@ -2,7 +2,7 @@ const admin = require('firebase-admin');
 const serviceAccount = require("./serviceAccountKey.json");
 const functions = require('firebase-functions');
 const line = require('@line/bot-sdk');
-const request = require('request-promise');
+
 
 
 const config = {
@@ -23,6 +23,7 @@ var dataOneDocumentRef = db.collection('data');
 
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/CronEndpoint/?action=fruit&message=ไปเอาผลไม้จ้า
 exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req, res) => {
+  const request = require('request-promise');
     console.log('req',req);
     console.log('query',req.query);
     const action = req.query.action;
