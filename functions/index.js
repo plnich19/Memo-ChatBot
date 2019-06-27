@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const serviceAccount = require("./serviceAccountKey.json");
 const functions = require('firebase-functions');
 const line = require('@line/bot-sdk');
+const request = require('request-promise');
 
 
 const config = {
