@@ -108,7 +108,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split("=");
         const datetime = req.body.events[0].postback.params.datetime;
-        updateTime(groupId,splitText[1],datetime);
+        updateTime(replyToken,groupId,splitText[1],datetime);
       }
     }
 
@@ -460,12 +460,12 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
         datetime: "",
         createtime: Date.now()
     })
-    .then(async function() {
+    .then(async function(result) {
         console.log("Task successfully written!");
-        let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
+        console.log("result.id = ",result.id);
+        let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(result.id);
         let getTask = await getTasksData(FindtasksDocumentRef);
-        console.log("taskId = ", getTask[0].TaskId);
-        replyDatePicker(replyToken,groupId,getTask[0].TaskId);
+        replyDatePicker(replyToken,groupId,result.id);
         return "OK";
     })
     .catch(function(error) {
@@ -493,7 +493,7 @@ const updateTask = async function(groupId){
       });
 }
 
-const updateTime = function(groupId,TaskId,datetime){
+const updateTime = function(replyToken,groupId,TaskId,datetime){
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
   let transaction = db.runTransaction(t => {
       return t.get(FindtasksDocumentRef)
@@ -505,8 +505,9 @@ const updateTime = function(groupId,TaskId,datetime){
           return "UPDATE";
         });
     }).then(result => {
-      replyToRoom(groupId,'อะ ลิสต์ล่าสุดจ้า');
-      getTask(groupId);
+      // replyToRoom(groupId,'อะ ลิสต์ล่าสุดจ้า');
+      // getTask(groupId);
+      reply(replyToken,'อัพเดทเวลาเรียบร้อยแล้ว!');
       console.log('Transaction success!');
       return "OK2";
     }).catch(err => {
@@ -514,6 +515,7 @@ const updateTime = function(groupId,TaskId,datetime){
     });
 }
 
+//FUNCTION FOR WEBAPP
 const getTask = async function(groupId){
     // <-- Read data from database part -->
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
@@ -523,10 +525,12 @@ const getTask = async function(groupId){
     //<-- End read data part -->
 }
 
+//FUNCTION FOR WEBAPP
 const getTaskDetail = async function(groupId,userSaid){
   var userSaidArray = userSaid.split(" ");
   console.log("splitText = ",userSaid);
   // <-- Read data from database part -->
+  //Replace where(title ==) with task id
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   console.log("getTaskDetail = ",getTaskDetail);
