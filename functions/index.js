@@ -414,7 +414,7 @@ const updateMember = function(groupId,userId){
 }
 
 const createTask = async function(groupId,userSaid,bool){
-  var assigneeIdArray = [];
+  let assigneeIdArray = [];
     var userSaidArray = userSaid.split(" ");
     console.log("(creatTask) UserSaidArray = ", userSaidArray);
     const checkAssignee = async function(userSaidArray){
@@ -429,22 +429,50 @@ const createTask = async function(groupId,userSaid,bool){
     }
     if(bool){
       const assigneeArray = await checkAssignee(userSaidArray);
-      console.log(assigneeArray);
+      console.log("assigneeArray = ",assigneeArray);
       var assigneeName = [];
       for(i=0;i<assigneeArray.length;i++){
         assigneeName.push(assigneeArray[i].split('@')[1]);
-      }
-      console.log("assigneeName = ", assigneeName);
-        let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
-        let getAssigneeData = getUsersData(FindmembersDocumentRef).then(res =>{
-          console.log("getAssigneeData = ",getAssigneeData);
-          getAssigneeData.forEach(obj =>{
-            assigneeIdArray.push(obj.userId);
-            console.log(obj.userId);
-        });
-        return "Push okay";
-        })
     }
+      // console.log("assigneeName = ", assigneeName);
+      //   let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
+      //   let getAssigneeData = getUsersData(FindmembersDocumentRef).then(res =>{
+      //     console.log("getAssigneeData = ",getAssigneeData);
+      //     getAssigneeData.forEach(obj =>{
+      //       assigneeIdArray.push(obj.userId);
+      //       console.log(obj.userId);
+      //   });
+      //   return "Push okay";
+      //   })
+      const getAssigneeIdArray = async function(assigneeName){
+        var getAssigneeData = [];
+        assigneeName.forEach((name) => {
+                getAssigneeData.push(db.collection('data').doc(groupId).collection('members')
+                    .where('displayName', '==', name.trim())
+                    .get());
+        })
+        const assigneeIdArray = await Promise.all(getAssigneeData).then((snapshots) => {
+            var assigneeIdArray = [];
+            snapshots.forEach((querySnapshot) => {
+                querySnapshot.docs.map((element) => {
+                  console.log("element.id = ",element.id);
+                  assigneeIdArray.push(element.id);
+                })
+            })
+            console.log("assigneeIdArray = ",assigneeIdArray);
+            // assigneeIdArray = JSON.stringify(assigneeIdArray);
+            return assigneeIdArray;
+        }).catch(err => {
+          console.log('Push failure:', err);
+        });
+
+        console.log("assigneeIdArray (outsidepromise) = ", assigneeIdArray);
+        return assigneeIdArray;
+      }
+    assigneeIdArray = await getAssigneeIdArray(assigneeName);
+    console.log("assigneeIdArray from await = ", assigneeIdArray);
+    }
+    console.log("assigneeIdArray last one = ", assigneeIdArray);
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
      // <---Write data part-->
      tasksDocumentRef.add({
@@ -459,15 +487,15 @@ const createTask = async function(groupId,userSaid,bool){
         let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
         let getTask = await getTasksData(FindtasksDocumentRef);
         console.log("taskId = ", getTask[0].TaskId);
-        replyToRoom(groupId,'เลือกเวลาไหม? ไม่เลือกก็ได้นะ');
-        replyDatePicker(groupId,getTask[0].TaskId);
+        //replyToRoom(groupId,'เลือกเวลาไหม? ไม่เลือกก็ได้นะ');
+        //replyDatePicker(groupId,getTask[0].TaskId);
         return "OK";
     })
     .catch(function(error) {
         console.error("Error writing document: ", error);
     });
-    <--End write data part-->
-}}
+    // <--End write data part-->
+}
 
 const updateTask = async function(groupId){
     let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc('YuqCbuRs8mKH6HHmFaWa');
