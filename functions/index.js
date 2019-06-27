@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const serviceAccount = require("./serviceAccountKey.json");
 const functions = require('firebase-functions');
 const line = require('@line/bot-sdk');
+const request = require('request-promise');
 
 
 const config = {
@@ -20,9 +21,37 @@ admin.initializeApp({
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection('data');
 
+// usage : https://asia-east2-memo-chatbot.cloudfunctions.net/CronEndpoint/?action=fruit&message=ไปเอาผลไม้จ้า
 exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req, res) => {
     console.log('req',req);
-    console.log('res',res);
+    console.log('query',req.query);
+    const action = req.query.action;
+    const message = req.query.message;
+    if (action !== undefined ) {
+      if(action === 'fruit'){
+        return request({
+          method: `POST`,
+          uri: `https://notify-api.line.me/api/notify`,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer bfGLqBR6AizJRwLORuf70f0UeoNlLrU02JTX5ReCBIr`
+          },
+          body: JSON.stringify({
+            message
+          })
+        }).then(() => {
+          const ret = { message: 'Done' };
+          return res.status(200).send(ret);
+        }).catch((error) => {
+          const ret = { message: `Sending error: ${error}` };
+          return res.status(500).send(ret);
+        });
+      }
+    } else {
+      const ret = { message: 'พัง' };
+      return res.status(400).send(ret);
+    }
+    
 });
 
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
@@ -40,19 +69,17 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const writeTask = await getMemberProfile(replyToken,groupId,userSaid,true);
         }else if(reqMessage.toLowerCase().includes('#create')){
             if(reqMessage.toLowerCase().includes('@')){
-              const userSaid = req.body.events[0].message.text;
+              const userSaid = req.body.events[0].message.text.split('#create')[1];
               const groupId = req.body.events[0].source.groupId;
               const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
               if(writeTask === true){
-                createTask(groupId,userSaid,true);
-                reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
+                createTask(replyToken,groupId,userSaid,true);
               }
             }
             else{
               const userSaid = req.body.events[0].message.text;
               const groupId = req.body.events[0].source.groupId;
-              createTask(groupId,userSaid,false);
-              reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
+              createTask(replyToken,groupId,userSaid,false);
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
             const groupId = req.body.events[0].source.groupId;
@@ -92,7 +119,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const userId = req.body.events[0].source.userId;
         const userProfile = await getUserProfileById(userId);
         const welComeMsg = `คุณ ${userProfile.displayName} เข้าร่วมการใช้งานแล้ว`;
-        replyToRoom(groupId,welComeMsg);
+        reply(replyToken,welComeMsg);
         // <---Write data part-->
         dataOneDocumentRef.doc(groupId).collection('members').doc(userId).set({
             displayName: userProfile.displayName,
@@ -115,7 +142,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split("=");
         const datetime = req.body.events[0].postback.params.datetime;
-        updateTime(groupId,splitText[1],datetime);
+        updateTime(replyToken,groupId,splitText[1],datetime);
       }
     }
 
@@ -206,14 +233,14 @@ const replyConfirmButton = (groupId) =>{
   });
 };
 
-const replyDatePicker = (groupId,TaskId) => {
-  return client.pushMessage(groupId, {
+const replyDatePicker = (replyToken,groupId,TaskId) => {
+  return client.replyMessage(replyToken, {
     "type": "template",
     "altText": "This is a buttons template",
     "template": {
         "type": "buttons",
-        "title": "เลือกวันที่",
-        "text": "เลือกวันจาก datepicker ได้เลย",
+        "title": "เลือกวันที่เวลา",
+        "text": "เลือกวัน deadline ไหม? ไม่เลือกก็ได้นะ",
         "actions": [
           {  
             "type":"datetimepicker",
@@ -418,35 +445,65 @@ const updateMember = function(groupId,userId){
     });
 }
 
-const createTask = async function(groupId,userSaid,bool){
-    var assigneeId = "";
+const createTask = async function(replyToken,groupId,userSaid,bool){
+  // t = เทสเทส เทส #to@ploy @J
+  // s = t.split("#to")[1].trim() = '@ploy @J'
+  // a = s.split(' ') = ['@ploy,@J']
+  // if a[1] !== undefined ? ass
+  let assigneeIdArray = [];
     var userSaidArray = userSaid.split(" ");
-    console.log("(creatTask) UserSaidArray = ", userSaidArray);
+    const checkAssignee = async function(userSaidArray){
+      var assigneeArray = [];
+      for(i=0;i<userSaidArray.length;i++){
+        if(userSaidArray[i].includes('@')){
+          assigneeArray.push(userSaidArray[i]);
+        }
+    }
+      return assigneeArray;
+    }
     if(bool){
-      var assigneeArray = userSaidArray[2].split("@");
-      var assigneeName = assigneeArray[1];
-      console.log("assigneeName = ", assigneeName);
-      let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
-      let getAssigneeData = await getUsersData(FindmembersDocumentRef);
-      console.log("getAssigneeData = ",getAssigneeData);
-      assigneeId = getAssigneeData[0].userId;
+      const assigneeArray = await checkAssignee(userSaidArray);
+      var assigneeName = [];
+      for(i=0;i<assigneeArray.length;i++){
+        assigneeName.push(assigneeArray[i].split('@')[1]);
+    }
+      const getAssigneeIdArray = async function(assigneeName){
+        var getAssigneeData = [];
+        assigneeName.forEach((name) => {
+                getAssigneeData.push(db.collection('data').doc(groupId).collection('members')
+                    .where('displayName', '==', name.trim())
+                    .get());
+        })
+        const assigneeIdArray = await Promise.all(getAssigneeData).then((snapshots) => {
+            var assigneeIdArray = [];
+            snapshots.forEach((querySnapshot) => {
+                querySnapshot.docs.map((element) => {
+                  assigneeIdArray.push(element.id);
+                })
+            })
+            return assigneeIdArray;
+        }).catch(err => {
+          console.log('Push failure:', err);
+        });
+        return assigneeIdArray;
+      }
+    assigneeIdArray = await getAssigneeIdArray(assigneeName);
     }
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
      // <---Write data part-->
      tasksDocumentRef.add({
         title: userSaidArray[1],
         status: "NOT DONE",
-        assignee: assigneeId,
+        assignee: assigneeIdArray,
         datetime: "",
         createtime: Date.now()
     })
-    .then(async function() {
+    .then(async function(result) {
         console.log("Task successfully written!");
-        let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
+        console.log("result.id = ",result.id);
+        let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(result.id);
         let getTask = await getTasksData(FindtasksDocumentRef);
-        console.log("taskId = ", getTask[0].TaskId);
-        replyToRoom(groupId,'เลือกเวลาไหม? ไม่เลือกก็ได้นะ');
-        replyDatePicker(groupId,getTask[0].TaskId);
+        replyDatePicker(replyToken,groupId,result.id);
         return "OK";
     })
     .catch(function(error) {
@@ -474,7 +531,7 @@ const updateTask = async function(groupId){
       });
 }
 
-const updateTime = function(groupId,TaskId,datetime){
+const updateTime = function(replyToken,groupId,TaskId,datetime){
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
   let transaction = db.runTransaction(t => {
       return t.get(FindtasksDocumentRef)
@@ -486,8 +543,9 @@ const updateTime = function(groupId,TaskId,datetime){
           return "UPDATE";
         });
     }).then(result => {
-      replyToRoom(groupId,'อะ ลิสต์ล่าสุดจ้า');
-      getTask(groupId);
+      const replyMsg = `อัพเดทเวลาเรียบร้อยแล้ว! 
+      พิมพ์ #display เพื่อดูลิสต์`;
+      reply(replyToken,replyMsg);
       console.log('Transaction success!');
       return "OK2";
     }).catch(err => {
@@ -495,6 +553,7 @@ const updateTime = function(groupId,TaskId,datetime){
     });
 }
 
+//FUNCTION FOR WEBAPP
 const getTask = async function(groupId){
     // <-- Read data from database part -->
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
@@ -504,10 +563,12 @@ const getTask = async function(groupId){
     //<-- End read data part -->
 }
 
+//FUNCTION FOR WEBAPP
 const getTaskDetail = async function(groupId,userSaid){
   var userSaidArray = userSaid.split(" ");
   console.log("splitText = ",userSaid);
   // <-- Read data from database part -->
+  //Replace where(title ==) with task id
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   console.log("getTaskDetail = ",getTaskDetail);
