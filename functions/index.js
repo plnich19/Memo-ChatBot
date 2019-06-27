@@ -79,7 +79,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               }
             }
             else{
-              const userSaid = req.body.events[0].message.text;
+              const userSaid = req.body.events[0].message.text.split("#create")[1];
               const groupId = req.body.events[0].source.groupId;
               createTask(replyToken,groupId,userSaid,false);
             }
@@ -454,8 +454,10 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
   // if a[1] !== undefined ? ass
   let assigneeIdArray = [];
     var userSaidArray = userSaid.split("#to");
-    var userSaidArrayAssignee = userSaid.split("#to")[1].trim();
+    var userSaidAssignee = userSaid.split("#to")[1].trim();
+    var assigneeArray = userSaidAssignee.split(" ");
     console.log("userSaidArray = ", userSaidArray);
+    console.log("userSaidArrayAssignee = ",userSaidArrayAssignee);
     const checkAssignee = async function(userSaidArrayAssignee){
       var assigneeArray = [];
       for(i=0;i<userSaidArray.length;i++){
@@ -466,7 +468,7 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
       return assigneeArray;
     }
     if(bool){
-      const assigneeArray = await checkAssignee(userSaidArray);
+      // const assigneeArray = await checkAssignee(userSaidArrayAssignee);
       var assigneeName = [];
       for(i=0;i<assigneeArray.length;i++){
         assigneeName.push(assigneeArray[i].split('@')[1]);
@@ -496,7 +498,7 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
      // <---Write data part-->
      tasksDocumentRef.add({
-        title: userSaidArray[1],
+        title: userSaidArray[0],
         status: "NOT DONE",
         assignee: assigneeIdArray,
         datetime: "",
