@@ -20,6 +20,7 @@ admin.initializeApp({
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection('data');
 
+// usage : https://asia-east2-memo-chatbot.cloudfunctions.net/CronEndpoint/?action=fruit&message=ไปเอาผลไม้จ้า
 exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req, res) => {
     console.log('req',req);
     console.log('query',req.query);
