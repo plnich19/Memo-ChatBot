@@ -448,9 +448,9 @@ const updateMember = function(groupId,userId){
 const createTask = async function(replyToken,groupId,userSaid,bool){
   let assigneeIdArray = [];
     var tasktitle = userSaid.split("#to")[0].trim();
-    var AssigneeString = userSaid.split("#to")[1].trim();
-    var assigneeArray = AssigneeString.split(" ");
     if(bool){
+      var AssigneeString = userSaid.split("#to")[1].trim();
+      var assigneeArray = AssigneeString.split(" ");
       var assigneeName = [];
       for(i=0;i<assigneeArray.length;i++){
         assigneeName.push(assigneeArray[i].split('@')[1]);
