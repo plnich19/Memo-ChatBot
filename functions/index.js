@@ -29,7 +29,7 @@ exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req
     const message = req.query.message;
     if (action !== undefined ) {
       if(action === 'fruit'){
-        request({
+        return request({
           method: `POST`,
           uri: `https://notify-api.line.me/api/notify`,
           headers: {
@@ -69,7 +69,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const writeTask = await getMemberProfile(replyToken,groupId,userSaid,true);
         }else if(reqMessage.toLowerCase().includes('#create')){
             if(reqMessage.toLowerCase().includes('@')){
-              const userSaid = req.body.events[0].message.text;
+              const userSaid = req.body.events[0].message.text.split('#create')[1];
               const groupId = req.body.events[0].source.groupId;
               const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
               if(writeTask === true){
@@ -446,6 +446,10 @@ const updateMember = function(groupId,userId){
 }
 
 const createTask = async function(replyToken,groupId,userSaid,bool){
+  // t = เทสเทส เทส #to@ploy @J
+  // s = t.split("#to")[1].trim() = '@ploy @J'
+  // a = s.split(' ') = ['@ploy,@J']
+  // if a[1] !== undefined ? ass
   let assigneeIdArray = [];
     var userSaidArray = userSaid.split(" ");
     const checkAssignee = async function(userSaidArray){
