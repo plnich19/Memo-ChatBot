@@ -505,7 +505,9 @@ const updateTime = function(replyToken,groupId,TaskId,datetime){
           return "UPDATE";
         });
     }).then(result => {
-      reply(replyToken,'อัพเดทเวลาเรียบร้อยแล้ว!');
+      const replyMsg = `อัพเดทเวลาเรียบร้อยแล้ว! 
+      พิมพ์ #display เพื่อดูลิสต์`;
+      reply(replyToken,replyMsg);
       console.log('Transaction success!');
       return "OK2";
     }).catch(err => {
