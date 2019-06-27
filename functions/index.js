@@ -39,14 +39,14 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               const groupId = req.body.events[0].source.groupId;
               const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
               if(writeTask === true){
-                createTask(groupId,userSaid,true);
+                createTask(replyToken,groupId,userSaid,true);
                 reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
               }
             }
             else{
               const userSaid = req.body.events[0].message.text;
               const groupId = req.body.events[0].source.groupId;
-              createTask(groupId,userSaid,false);
+              createTask(replyToken,groupId,userSaid,false);
               reply(replyToken,'สร้าง task ให้เรียบร้อยแล้วน้า');
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
@@ -87,7 +87,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const userId = req.body.events[0].source.userId;
         const userProfile = await getUserProfileById(userId);
         const welComeMsg = `คุณ ${userProfile.displayName} เข้าร่วมการใช้งานแล้ว`;
-        replyToRoom(groupId,welComeMsg);
+        reply(replyToken,welComeMsg);
         // <---Write data part-->
         dataOneDocumentRef.doc(groupId).collection('members').doc(userId).set({
             displayName: userProfile.displayName,
@@ -201,18 +201,18 @@ const replyConfirmButton = (groupId) =>{
   });
 };
 
-const replyDatePicker = (groupId,TaskId) => {
-  return client.pushMessage(groupId, {
+const replyDatePicker = (replyToken,groupId,TaskId) => {
+  return client.replyMessage(replyToken, {
     "type": "template",
     "altText": "This is a buttons template",
     "template": {
         "type": "buttons",
-        "title": "เลือกวันที่",
+        "title": "เลือกวันที่เวลา",
         "text": "เลือกวันจาก datepicker ได้เลย",
         "actions": [
           {  
             "type":"datetimepicker",
-            "label":"เลือกวันเวลา",
+            "label":"เลือกวันเวลาเดดไลน์ไหม? ไม่เลือกก็ได้นะ",
             "data":`TaskId=${TaskId}`,
             "mode":"datetime",
             "initial":"2017-12-25t00:00",
@@ -413,7 +413,7 @@ const updateMember = function(groupId,userId){
     });
 }
 
-const createTask = async function(groupId,userSaid,bool){
+const createTask = async function(replyToken,groupId,userSaid,bool){
   let assigneeIdArray = [];
     var userSaidArray = userSaid.split(" ");
     const checkAssignee = async function(userSaidArray){
@@ -467,8 +467,7 @@ const createTask = async function(groupId,userSaid,bool){
         let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
         let getTask = await getTasksData(FindtasksDocumentRef);
         console.log("taskId = ", getTask[0].TaskId);
-        //replyToRoom(groupId,'เลือกเวลาไหม? ไม่เลือกก็ได้นะ');
-        //replyDatePicker(groupId,getTask[0].TaskId);
+        replyDatePicker(replyToken,groupId,getTask[0].TaskId);
         return "OK";
     })
     .catch(function(error) {
