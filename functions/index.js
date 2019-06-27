@@ -416,11 +416,9 @@ const updateMember = function(groupId,userId){
 const createTask = async function(groupId,userSaid,bool){
   let assigneeIdArray = [];
     var userSaidArray = userSaid.split(" ");
-    console.log("(creatTask) UserSaidArray = ", userSaidArray);
     const checkAssignee = async function(userSaidArray){
       var assigneeArray = [];
       for(i=0;i<userSaidArray.length;i++){
-        console.log(userSaidArray[i]);
         if(userSaidArray[i].includes('@')){
           assigneeArray.push(userSaidArray[i]);
         }
@@ -429,21 +427,10 @@ const createTask = async function(groupId,userSaid,bool){
     }
     if(bool){
       const assigneeArray = await checkAssignee(userSaidArray);
-      console.log("assigneeArray = ",assigneeArray);
       var assigneeName = [];
       for(i=0;i<assigneeArray.length;i++){
         assigneeName.push(assigneeArray[i].split('@')[1]);
     }
-      // console.log("assigneeName = ", assigneeName);
-      //   let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',assigneeName.trim());
-      //   let getAssigneeData = getUsersData(FindmembersDocumentRef).then(res =>{
-      //     console.log("getAssigneeData = ",getAssigneeData);
-      //     getAssigneeData.forEach(obj =>{
-      //       assigneeIdArray.push(obj.userId);
-      //       console.log(obj.userId);
-      //   });
-      //   return "Push okay";
-      //   })
       const getAssigneeIdArray = async function(assigneeName){
         var getAssigneeData = [];
         assigneeName.forEach((name) => {
@@ -455,24 +442,17 @@ const createTask = async function(groupId,userSaid,bool){
             var assigneeIdArray = [];
             snapshots.forEach((querySnapshot) => {
                 querySnapshot.docs.map((element) => {
-                  console.log("element.id = ",element.id);
                   assigneeIdArray.push(element.id);
                 })
             })
-            console.log("assigneeIdArray = ",assigneeIdArray);
-            // assigneeIdArray = JSON.stringify(assigneeIdArray);
             return assigneeIdArray;
         }).catch(err => {
           console.log('Push failure:', err);
         });
-
-        console.log("assigneeIdArray (outsidepromise) = ", assigneeIdArray);
         return assigneeIdArray;
       }
     assigneeIdArray = await getAssigneeIdArray(assigneeName);
-    console.log("assigneeIdArray from await = ", assigneeIdArray);
     }
-    console.log("assigneeIdArray last one = ", assigneeIdArray);
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
      // <---Write data part-->
      tasksDocumentRef.add({
