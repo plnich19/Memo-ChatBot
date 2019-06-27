@@ -505,8 +505,6 @@ const updateTime = function(replyToken,groupId,TaskId,datetime){
           return "UPDATE";
         });
     }).then(result => {
-      // replyToRoom(groupId,'อะ ลิสต์ล่าสุดจ้า');
-      // getTask(groupId);
       reply(replyToken,'อัพเดทเวลาเรียบร้อยแล้ว!');
       console.log('Transaction success!');
       return "OK2";
