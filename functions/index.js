@@ -48,7 +48,7 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
         return res.status(400).send(ret);
       }
     }else if(action === 'updateTask'){
-      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMember&groupId=Ce938b6c2ba40812b0afa36e11078ec56&taskId=xxxxxxxx
+      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=updateTask&groupId=Ce938b6c2ba40812b0afa36e11078ec56&taskId=xxxxxxxx
       const groupId = req.query.groupId;
       const taskId = req.query.taskId;
       if(groupId !== undefined || taskId !== undefined ){
@@ -58,8 +58,19 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
         const ret = { message: 'พังจริง' };
         return res.status(400).send(ret);
       }
+    }else if(action === 'deleteTask'){
+      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=deleteTask&groupId=Ce938b6c2ba40812b0afa36e11078ec56&taskId=xxxxxxxx
+      const groupId = req.query.groupId;
+      const taskId = req.query.taskId;
+      if(groupId !== undefined || taskId !== undefined ){
+        const rtnData =  await deleteTask(groupId,taskId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
     }
-  } else {
+  }else {
     const ret = { message: 'พัง' };
     return res.status(400).send(ret);
   }
@@ -619,6 +630,17 @@ const getTaskDetail = async function(groupId,userSaid){
   console.log("getTaskDetail = ",getTaskDetail);
   replyTaskCorouselToRoom(groupId,getTaskDetail);
   //<-- End read data part -->
+}
+
+const deleteTask = function(groupId,taskId){
+  let  tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
+  tasksDocumentRef.delete()
+  .then(result => {
+    console.log('Delete success!');
+    return "OK2";
+  }).catch(err => {
+    console.log('Delete failure:', err);
+  });
 }
 
 const setAdmin = async function(groupId, splitText){
