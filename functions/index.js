@@ -38,8 +38,39 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
         const ret = { message: 'พังจริง' };
         return res.status(400).send(ret);
       }
+    }else if(action === 'getTasks'){
+      const groupId = req.query.groupId;
+      if(groupId !== undefined ){
+        const rtnData =  await getTasks(groupId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
+    }else if(action === 'updateTask'){
+      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=updateTask&groupId=Ce938b6c2ba40812b0afa36e11078ec56&taskId=xxxxxxxx
+      const groupId = req.query.groupId;
+      const taskId = req.query.taskId;
+      if(groupId !== undefined || taskId !== undefined ){
+        const rtnData =  await updateTask(groupId,taskId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
+    }else if(action === 'deleteTask'){
+      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=deleteTask&groupId=Ce938b6c2ba40812b0afa36e11078ec56&taskId=xxxxxxxx
+      const groupId = req.query.groupId;
+      const taskId = req.query.taskId;
+      if(groupId !== undefined || taskId !== undefined ){
+        const rtnData =  await deleteTask(groupId,taskId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
     }
-  } else {
+  }else {
     const ret = { message: 'พัง' };
     return res.status(400).send(ret);
   }
@@ -86,7 +117,8 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const reqMessage = req.body.events[0].message.text;
         if(reqMessage.toLowerCase() === 'getmember'){
             const groupId = req.body.events[0].source.groupId;
-            getMembers(groupId);
+            const getUsers = await getMembers(groupId);
+            replyCorouselToRoom(groupId,getUsers);
         }else if(reqMessage.toLowerCase().includes('getmemberprofile')){
             const userSaid = req.body.events[0].message.text;
             const groupId = req.body.events[0].source.groupId;
@@ -108,10 +140,10 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             }
         }else if(reqMessage.toLowerCase() === 'updatetask'){
             const groupId = req.body.events[0].source.groupId;
-            updateTask(groupId);
-        }else if(reqMessage.toLowerCase() === 'gettask' || reqMessage.toLowerCase() === '#display'){
+            //updateTask(groupId,taskId);
+        }else if(reqMessage.toLowerCase() === 'gettasks' || reqMessage.toLowerCase() === '#display'){
             // const groupId = req.body.events[0].source.groupId;
-            // getTask(groupId);
+            // getTasks(groupId);
             replyLiff(replyToken);
         }else if(reqMessage.toLowerCase() === 'updatemember'){
             const groupId = req.body.events[0].source.groupId;
@@ -163,7 +195,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split(" ");
         setAdmin(groupId,splitText);
-      }else if(postbackData.includes('TaskId=')){
+      }else if(postbackData.includes('taskId=')){
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split("=");
         const datetime = req.body.events[0].postback.params.datetime;
@@ -258,7 +290,7 @@ const replyConfirmButton = (groupId) =>{
   });
 };
 
-const replyDatePicker = (replyToken,groupId,TaskId) => {
+const replyDatePicker = (replyToken,groupId,taskId) => {
   return client.replyMessage(replyToken, {
     "type": "template",
     "altText": "This is a buttons template",
@@ -270,7 +302,7 @@ const replyDatePicker = (replyToken,groupId,TaskId) => {
           {  
             "type":"datetimepicker",
             "label":"เลือกวันเวลา",
-            "data":`TaskId=${TaskId}`,
+            "data":`taskId=${taskId}`,
             "mode":"datetime",
             "initial":"2017-12-25t00:00",
             "max":"2018-01-24t23:59",
@@ -377,7 +409,7 @@ const getTasksData = function(db){
         console.log('getTasksData = ',doc.id, '=>', data);
 
         TasksArray.push({
-          TaskId:doc.id,
+          taskId:doc.id,
           title: data.title,
           status: data.status,
           assignee: data.assignee,
@@ -413,7 +445,6 @@ const getMembers = async function(groupId){
     let membersDocumentRef = db.collection('data').doc(groupId).collection('members');
     let getUsers = await getUsersData(membersDocumentRef);
     console.log("(getMembers) getUsers = ",getUsers);
-    // replyCorouselToRoom(groupId,getUsers);
     return getUsers;
     //<-- End read data part -->
 }
@@ -526,14 +557,11 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     // <--End write data part-->
 }
 
-const updateTask = async function(groupId){
-    let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc('YuqCbuRs8mKH6HHmFaWa');
+const updateTask = async function(groupId,taskId){
+    let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
     let transaction = db.runTransaction(t => {
         return t.get(FindtasksDocumentRef)
           .then(doc => {
-            // Add one person to the city population.
-            // Note: this could be done without a transaction
-            //       by updating the population using FieldValue.increment()
             t.update(FindtasksDocumentRef, {status: "DONE"});
             return "UPDATE";
           });
@@ -545,8 +573,8 @@ const updateTask = async function(groupId){
       });
 }
 
-const updateTime = function(replyToken,groupId,TaskId,datetime){
-  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(TaskId);
+const updateTime = function(replyToken,groupId,taskId,datetime){
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
   let transaction = db.runTransaction(t => {
       return t.get(FindtasksDocumentRef)
         .then(doc => {
@@ -568,12 +596,12 @@ const updateTime = function(replyToken,groupId,TaskId,datetime){
 }
 
 //FUNCTION FOR WEBAPP
-const getTask = async function(groupId){
+const getTasks = async function(groupId){
     // <-- Read data from database part -->
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
     let getTasks = await getTasksData(tasksDocumentRef);
     console.log("getTasks = ",getTasks);
-    replyTaskCorouselToRoom(groupId,getTasks);
+    return getTasks;
     //<-- End read data part -->
 }
 
@@ -588,6 +616,17 @@ const getTaskDetail = async function(groupId,userSaid){
   console.log("getTaskDetail = ",getTaskDetail);
   replyTaskCorouselToRoom(groupId,getTaskDetail);
   //<-- End read data part -->
+}
+
+const deleteTask = function(groupId,taskId){
+  let  tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
+  tasksDocumentRef.delete()
+  .then(result => {
+    console.log('Delete success!');
+    return "OK2";
+  }).catch(err => {
+    console.log('Delete failure:', err);
+  });
 }
 
 const setAdmin = async function(groupId, splitText){
