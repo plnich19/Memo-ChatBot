@@ -23,6 +23,9 @@ var dataOneDocumentRef = db.collection('data');
 
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMember&groupId=Ce938b6c2ba40812b0afa36e11078ec56
 exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res) => {
+
+  res.set('Access-Control-Allow-Origin', "*");
+  res.set('Access-Control-Allow-Methods', 'GET, POST');
   
   console.log('req',req);
   console.log('query',req.query);
