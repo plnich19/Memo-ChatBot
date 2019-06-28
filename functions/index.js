@@ -566,8 +566,6 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
         console.log(dateLimit);
         console.log("Task successfully written!");
         console.log("result.id = ",result.id);
-        // let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(result.id);
-        // let getTask = await getTasksData(FindtasksDocumentRef);
         replyDatePicker(replyToken,groupId,result.id,dateLimit);
         return "OK";
     })
