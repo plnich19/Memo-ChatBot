@@ -54,8 +54,9 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
       // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=updateTask&groupId=Ce938b6c2ba40812b0afa36e11078ec56&taskId=xxxxxxxx
       const groupId = req.query.groupId;
       const taskId = req.query.taskId;
+      const data = req.body;
       if(groupId !== undefined || taskId !== undefined ){
-        const rtnData =  await updateTask(groupId,taskId);
+        const rtnData =  await updateTask(groupId,taskId,data);
         return res.status(200).send(JSON.stringify(rtnData));
       }else{
         const ret = { message: 'พังจริง' };
@@ -67,6 +68,17 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
       const taskId = req.query.taskId;
       if(groupId !== undefined || taskId !== undefined ){
         const rtnData =  await deleteTask(groupId,taskId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
+    }else if(action === 'getYourTask'){
+      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getYourTask&groupId=Ce938b6c2ba40812b0afa36e11078ec56&userId=xxxxxxxx
+      const groupId = req.query.groupId;
+      const userId = req.query.userId;
+      if(groupId !== undefined || userId !== undefined ){
+        const rtnData =  await getYourTask(groupId,userId);
         return res.status(200).send(JSON.stringify(rtnData));
       }else{
         const ret = { message: 'พังจริง' };
@@ -113,7 +125,7 @@ exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req
 });
 
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
-
+      
     const reqType = req.body.events[0].type;
     const replyToken = req.body.events[0].replyToken;
     if(reqType === 'message'){
@@ -155,7 +167,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         }else if(reqMessage.toLowerCase().includes('gettaskdetail')){
           const userSaid = req.body.events[0].message.text;
           const groupId = req.body.events[0].source.groupId;
-          getTaskDetail(groupId,userSaid);
+          getTaskDetailNotDone(groupId);
       }
     }else if(reqType === 'join'){
         const groupId = req.body.events[0].source.groupId;
@@ -293,7 +305,7 @@ const replyConfirmButton = (groupId) =>{
   });
 };
 
-const replyDatePicker = (replyToken,groupId,taskId) => {
+const replyDatePicker = (replyToken,groupId,taskId,dateLimit) => {
   return client.replyMessage(replyToken, {
     "type": "template",
     "altText": "This is a buttons template",
@@ -307,9 +319,8 @@ const replyDatePicker = (replyToken,groupId,taskId) => {
             "label":"เลือกวันเวลา",
             "data":`taskId=${taskId}`,
             "mode":"datetime",
-            "initial":"2017-12-25t00:00",
-            "max":"2018-01-24t23:59",
-            "min":"2017-12-25t00:00"
+            "initial": dateLimit,
+            "min":dateLimit
          },
         {
           "type": "postback",
@@ -547,11 +558,17 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
         createtime: Date.now()
     })
     .then(async function(result) {
+      var date = new Date(Date.now());
+      var dateISOString = date.toISOString();
+      console.log(dateISOString);
+      var splitText = dateISOString.split("T");
+      var dateLimit = `${splitText[0]}T00:00`;
+        console.log(dateLimit);
         console.log("Task successfully written!");
         console.log("result.id = ",result.id);
         // let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(result.id);
         // let getTask = await getTasksData(FindtasksDocumentRef);
-        replyDatePicker(replyToken,groupId,result.id);
+        replyDatePicker(replyToken,groupId,result.id,dateLimit);
         return "OK";
     })
     .catch(function(error) {
@@ -560,12 +577,12 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     // <--End write data part-->
 }
 
-const updateTask = async function(groupId,taskId){
+const updateTask = async function(groupId,taskId,data){
     let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
     let transaction = db.runTransaction(t => {
         return t.get(FindtasksDocumentRef)
           .then(doc => {
-            t.update(FindtasksDocumentRef, {status: "DONE"});
+            t.update(FindtasksDocumentRef, data);
             return "UPDATE";
           });
       }).then(result => {
@@ -584,7 +601,7 @@ const updateTime = function(replyToken,groupId,taskId,datetime){
           // Add one person to the city population.
           // Note: this could be done without a transaction
           //       by updating the population using FieldValue.increment()
-          t.update(FindtasksDocumentRef, {datetime: datetime});
+          t.update(FindtasksDocumentRef, {datetime: Date.parse(datetime)});
           return "UPDATE";
         });
     }).then(result => {
@@ -609,15 +626,23 @@ const getTasks = async function(groupId){
 }
 
 //FUNCTION FOR WEBAPP
-const getTaskDetail = async function(groupId,userSaid){
-  var userSaidArray = userSaid.split(" ");
-  console.log("splitText = ",userSaid);
+const getTaskDetailNotDone = async function(groupId){
   // <-- Read data from database part -->
   //Replace where(title ==) with task id
-  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
+  var date = Date.now();
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('status','==','NOT DONE').where('datetime','<=',date);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   console.log("getTaskDetail = ",getTaskDetail);
   replyTaskCorouselToRoom(groupId,getTaskDetail);
+  //<-- End read data part -->
+}
+
+const getYourTask = async function(groupId,userId){
+  // <-- Read data from database part -->
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('assignee','array-contains',userId);
+  let getYourTask = await getTasksData(FindtasksDocumentRef);
+  console.log("getYourTask = ",getYourTask);
+  return getYourTask;
   //<-- End read data part -->
 }
 
