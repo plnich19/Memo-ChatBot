@@ -21,6 +21,31 @@ admin.initializeApp({
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection('data');
 
+// usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMember&groupId=Ce938b6c2ba40812b0afa36e11078ec56
+exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res) => {
+  
+  console.log('req',req);
+  console.log('query',req.query);
+  const action = req.query.action;
+  
+  if (action !== undefined ) {
+    if(action === 'getMember'){
+      const groupId = req.query.groupId;
+      if(groupId !== undefined ){
+        const rtnData =  await getMembers(groupId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
+    }
+  } else {
+    const ret = { message: 'พัง' };
+    return res.status(400).send(ret);
+  }
+  
+});
+
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/CronEndpoint/?action=fruit&message=ไปเอาผลไม้จ้า
 exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req, res) => {
   
@@ -388,7 +413,8 @@ const getMembers = async function(groupId){
     let membersDocumentRef = db.collection('data').doc(groupId).collection('members');
     let getUsers = await getUsersData(membersDocumentRef);
     console.log("(getMembers) getUsers = ",getUsers);
-    replyCorouselToRoom(groupId,getUsers);
+    // replyCorouselToRoom(groupId,getUsers);
+    return getUsers;
     //<-- End read data part -->
 }
 
