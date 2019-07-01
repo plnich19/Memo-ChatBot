@@ -4,7 +4,6 @@ const functions = require('firebase-functions');
 const line = require('@line/bot-sdk');
 const request = require('request-promise');
 
-
 const config = {
     channelAccessToken: 'HTK6RpxiRFtlIMDl7s+Klz4WEGz8r0GInSc6ms02dPpWwugI73tRSd/hoKAunXm6KFGBsEVpeTsdwxu9AIRxFaMB+VhJiiKYPEY9Bd3vDP5qYK8X/P1lT/N+kvq01BDfK+ZP7LFniduqFxcRhZgL8AdB04t89/1O/w1cDnyilFU=',
     channelSecret: '3e2bbc2929bf520a6724d65449b6b345'
