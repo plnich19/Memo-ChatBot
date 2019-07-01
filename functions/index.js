@@ -187,12 +187,19 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         replyConfirmButton(groupId);
         // const memberIds = await getGroupMemberIds(groupId);
         // console.log(memberIds);
+    }else if(reqType === 'leave'){
+      const groupId = req.body.events[0].source.groupId;
+      DeleteGroupData(groupId);
     }else if(reqType === 'memberJoined'){
         const userId = req.body.events[0].joined.members[0].userId;
         const groupId = req.body.events[0].source.groupId;
         const userProfile = await getUserProfileById(userId);
         const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
         replyToRoom(groupId,welComeMsg);
+    }else if(reqType === 'memberLeft'){
+      const userId = req.body.events[0].left.members[0].userId;
+      const groupId = req.body.events[0].source.groupId;
+      DeleteUserData(groupId,userId);
     }else if(reqType === 'postback'){
       const postbackData = req.body.events[0].postback.data;
       if(postbackData === 'confirm'){
@@ -457,8 +464,14 @@ const getGroupMemberIds = function(userId) {
           });
 };
 
-const DeleteUserData = function(db){
-    return db.doc("New Sample UserId").delete();
+const DeleteUserData = function(groupId,userId){
+    let membersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(userId);
+    return membersDocumentRef.delete();
+};
+
+const DeleteGroupData = function(groupId){
+  let groupDocumentRef = db.collection('data').doc(groupId);
+  return groupDocumentRef.delete();
 };
 
 const getMembers = async function(groupId){
@@ -509,9 +522,6 @@ const updateMember = function(groupId,userId){
   let transaction = db.runTransaction(t => {
       return t.get(FindmembersDocumentRef)
         .then(doc => {
-          // Add one person to the city population.
-          // Note: this could be done without a transaction
-          //       by updating the population using FieldValue.increment()
           t.update(FindmembersDocumentRef, {role: "Member"});
           return "UPDATE";
         });
@@ -629,7 +639,6 @@ const getTasks = async function(groupId){
     //<-- End read data part -->
 }
 
-//FUNCTION FOR WEBAPP
 const getTaskDetailNotDone = async function(groupId){
   // <-- Read data from database part -->
   const ytdmn = await ytdTimestamp();
@@ -676,9 +685,7 @@ const ytdTimestamp = function(){
   var today = new Date();
   var ytd = today.setDate(today.getDate() - 1);
   var ytdDate = new Date(ytd);
-
-  console.log(event.toUTCString());
-  // expected output: Wed, 14 Jun 2017 07:00:00 GMT
+  console.log(ytdDate.toUTCString());
   var ytdTimestamp = ytdDate.setHours(0,0,0,0);
   console.log(ytdTimestamp);
   return ytdTimestamp;
@@ -687,7 +694,6 @@ const ytdTimestamp = function(){
 const tdTimestamp = function(){
   var now = new Date(Date.now());
   console.log(now);
-
   var today = now.setHours(0,0,0,0);
   console.log(today);
   return today;
