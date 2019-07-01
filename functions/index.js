@@ -15,7 +15,7 @@ const client = new line.Client(config);
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: "https://memo-chatbot.firebaseio.com"
-  });
+});
 
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection('data');
@@ -98,7 +98,6 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
     const ret = { message: 'พัง' };
     return res.status(400).send(ret);
   }
-  
 });
 
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/CronEndpoint/?action=fruit&message=ไปเอาผลไม้จ้า
@@ -166,8 +165,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const groupId = req.body.events[0].source.groupId;
             //updateTask(groupId,taskId);
         }else if(reqMessage.toLowerCase() === 'gettasks' || reqMessage.toLowerCase() === '#display'){
-            // const groupId = req.body.events[0].source.groupId;
-            // getTasks(groupId);
             replyLiff(replyToken);
         }else if(reqMessage.toLowerCase() === 'updatemember'){
             const groupId = req.body.events[0].source.groupId;
