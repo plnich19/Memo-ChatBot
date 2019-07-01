@@ -23,6 +23,9 @@ var dataOneDocumentRef = db.collection('data');
 
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMember&groupId=Ce938b6c2ba40812b0afa36e11078ec56
 exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res) => {
+
+  res.set('Access-Control-Allow-Origin', "*");
+  res.set('Access-Control-Allow-Methods', 'GET, POST');
   
   console.log('req',req);
   console.log('query',req.query);
@@ -51,8 +54,9 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
       // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=updateTask&groupId=Ce938b6c2ba40812b0afa36e11078ec56&taskId=xxxxxxxx
       const groupId = req.query.groupId;
       const taskId = req.query.taskId;
+      const data = req.body;
       if(groupId !== undefined || taskId !== undefined ){
-        const rtnData =  await updateTask(groupId,taskId);
+        const rtnData =  await updateTask(groupId,taskId,data);
         return res.status(200).send(JSON.stringify(rtnData));
       }else{
         const ret = { message: 'พังจริง' };
@@ -64,6 +68,27 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
       const taskId = req.query.taskId;
       if(groupId !== undefined || taskId !== undefined ){
         const rtnData =  await deleteTask(groupId,taskId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
+    }else if(action === 'getYourTask'){
+      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getYourTask&groupId=Ce938b6c2ba40812b0afa36e11078ec56&userId=xxxxxxxx
+      const groupId = req.query.groupId;
+      const userId = req.query.userId;
+      if(groupId !== undefined || userId !== undefined ){
+        const rtnData =  await getYourTask(groupId,userId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
+    }else if(action === 'getTaskDetailNotDone'){
+      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getTaskDetailNotDone&groupId=Ce938b6c2ba40812b0afa36e11078ec56
+      const groupId = req.query.groupId;
+      if(groupId !== undefined){
+        const rtnData =  await getTaskDetailNotDone(groupId);
         return res.status(200).send(JSON.stringify(rtnData));
       }else{
         const ret = { message: 'พังจริง' };
@@ -110,7 +135,7 @@ exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req
 });
 
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
-
+      
     const reqType = req.body.events[0].type;
     const replyToken = req.body.events[0].replyToken;
     if(reqType === 'message'){
@@ -150,9 +175,8 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const userId = req.body.events[0].source.userId;
             updateMember(groupId,userId);
         }else if(reqMessage.toLowerCase().includes('gettaskdetail')){
-          const userSaid = req.body.events[0].message.text;
           const groupId = req.body.events[0].source.groupId;
-          getTaskDetail(groupId,userSaid);
+          getTaskDetailNotDone(groupId);
       }
     }else if(reqType === 'join'){
         const groupId = req.body.events[0].source.groupId;
@@ -193,8 +217,8 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         // <--End write data part-->
       }else if(postbackData.includes('Make admin')){
         const groupId = req.body.events[0].source.groupId;
-        const splitText = postbackData.split(" ");
-        setAdmin(groupId,splitText);
+        const MakeAdminSplitText = postbackData.split(" ");
+        setAdmin(groupId,MakeAdminSplitText);
       }else if(postbackData.includes('taskId=')){
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split("=");
@@ -202,10 +226,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         updateTime(replyToken,groupId,splitText[1],datetime);
       }
     }
-
-
-//Call delete data function
-//DeleteUserData(userOneDocumentRef);
 });
 
 const reply = (replyToken,message) => {
@@ -255,9 +275,11 @@ const replyTaskCorouselToRoom = (groupId,TasksArray) => {
           type: 'carousel',
           actions: [],
           columns: TasksArray.map((task) => {
+            var event = new Date(task.datetime);
+            var date = event.toDateString();
             return {
               title: task.title,
-              text: `Status: ${task.status} Date: ${task.datetime}`,
+              text: `Status: ${task.status} Date: ${date}`,
               actions: [
                 {
                   type: "message",
@@ -290,7 +312,7 @@ const replyConfirmButton = (groupId) =>{
   });
 };
 
-const replyDatePicker = (replyToken,groupId,taskId) => {
+const replyDatePicker = (replyToken,groupId,taskId,dateLimit) => {
   return client.replyMessage(replyToken, {
     "type": "template",
     "altText": "This is a buttons template",
@@ -304,9 +326,8 @@ const replyDatePicker = (replyToken,groupId,taskId) => {
             "label":"เลือกวันเวลา",
             "data":`taskId=${taskId}`,
             "mode":"datetime",
-            "initial":"2017-12-25t00:00",
-            "max":"2018-01-24t23:59",
-            "min":"2017-12-25t00:00"
+            "initial": dateLimit,
+            "min":dateLimit
          },
         {
           "type": "postback",
@@ -544,11 +565,14 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
         createtime: Date.now()
     })
     .then(async function(result) {
+      var date = new Date(Date.now());
+      var dateISOString = date.toISOString();
+      console.log(dateISOString);
+      var splitText = dateISOString.split("T");
+      var dateLimit = `${splitText[0]}T00:00`;
+        console.log(dateLimit);
         console.log("Task successfully written!");
-        console.log("result.id = ",result.id);
-        // let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(result.id);
-        // let getTask = await getTasksData(FindtasksDocumentRef);
-        replyDatePicker(replyToken,groupId,result.id);
+        replyDatePicker(replyToken,groupId,result.id,dateLimit);
         return "OK";
     })
     .catch(function(error) {
@@ -557,12 +581,12 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     // <--End write data part-->
 }
 
-const updateTask = async function(groupId,taskId){
+const updateTask = async function(groupId,taskId,data){
     let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
     let transaction = db.runTransaction(t => {
         return t.get(FindtasksDocumentRef)
           .then(doc => {
-            t.update(FindtasksDocumentRef, {status: "DONE"});
+            t.update(FindtasksDocumentRef, data);
             return "UPDATE";
           });
       }).then(result => {
@@ -581,7 +605,7 @@ const updateTime = function(replyToken,groupId,taskId,datetime){
           // Add one person to the city population.
           // Note: this could be done without a transaction
           //       by updating the population using FieldValue.increment()
-          t.update(FindtasksDocumentRef, {datetime: datetime});
+          t.update(FindtasksDocumentRef, {datetime: Date.parse(datetime)});
           return "UPDATE";
         });
     }).then(result => {
@@ -606,15 +630,23 @@ const getTasks = async function(groupId){
 }
 
 //FUNCTION FOR WEBAPP
-const getTaskDetail = async function(groupId,userSaid){
-  var userSaidArray = userSaid.split(" ");
-  console.log("splitText = ",userSaid);
+const getTaskDetailNotDone = async function(groupId){
   // <-- Read data from database part -->
-  //Replace where(title ==) with task id
-  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('title','==',userSaidArray[1]);
+  const ytdmn = await ytdTimestamp();
+  const today = await tdTimestamp();
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('status','==','NOT DONE').where('datetime','>',ytdmn).where('datetime','<=',today);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   console.log("getTaskDetail = ",getTaskDetail);
   replyTaskCorouselToRoom(groupId,getTaskDetail);
+  //<-- End read data part -->
+}
+
+const getYourTask = async function(groupId,userId){
+  // <-- Read data from database part -->
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('assignee','array-contains',userId);
+  let getYourTask = await getTasksData(FindtasksDocumentRef);
+  console.log("getYourTask = ",getYourTask);
+  return getYourTask;
   //<-- End read data part -->
 }
 
@@ -629,8 +661,8 @@ const deleteTask = function(groupId,taskId){
   });
 }
 
-const setAdmin = async function(groupId, splitText){
-  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(splitText[2]);
+const setAdmin = async function(groupId, MakeAdminSplitText){
+  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(MakeAdminSplitText[2]);
   FindmembersDocumentRef.update({role: "Admin"})
   .then(result => {
     console.log('Transaction success!');
@@ -638,4 +670,25 @@ const setAdmin = async function(groupId, splitText){
   }).catch(err => {
     console.log('Transaction failure:', err);
   });
+}
+
+const ytdTimestamp = function(){
+  var ytd = new Date();
+  var ytd1 = ytd.setDate(ytd.getDate() - 1);
+  var event = new Date(ytd1);
+
+  console.log(event.toUTCString());
+  // expected output: Wed, 14 Jun 2017 07:00:00 GMT
+  var ytdmn = event.setHours(0,0,0,0);
+  console.log(ytdmn);
+  return ytdmn;
+}
+
+const tdTimestamp = function(){
+  var now = new Date(Date.now());
+  console.log(now);
+
+  var today = now.setHours(0,0,0,0);
+  console.log(today);
+  return today;
 }
