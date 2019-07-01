@@ -422,7 +422,6 @@ const getUsersData = function(db){
             role: data.role
           });
         });
-
         return UsersArray;
     })
 };
@@ -434,7 +433,6 @@ const getTasksData = function(db){
       snapshot.forEach(doc => {
       const data = doc.data();
         console.log('getTasksData = ',doc.id, '=>', data);
-
         TasksArray.push({
           taskId:doc.id,
           title: data.title,
@@ -444,7 +442,6 @@ const getTasksData = function(db){
           createtime: data.createtime
         });
       });
-
       return TasksArray;
   })
 };
@@ -487,93 +484,92 @@ const getMemberProfile = async function(replyToken,groupId,userSaid,bool){
   const isEmpty = function(obj) {
     for(var key in obj) {
         if(obj.hasOwnProperty(key))
-            return false;
+          return false;
     }
     return true;
   }
-    var userSaidArray = userSaid.split("@");
-    console.log("(getMemberProfile) userSaidArray = ",userSaidArray);
-    // <-- Read data from database part -->
-    let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',userSaidArray[1].trim());
-    let getMemberProfile = await getUsersData(FindmembersDocumentRef);
-    console.log("getMemberProfile = ",getMemberProfile);
+  var userSaidArray = userSaid.split("@");
+  console.log("(getMemberProfile) userSaidArray = ",userSaidArray);
+  // <-- Read data from database part -->
+  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',userSaidArray[1].trim());
+  let getMemberProfile = await getUsersData(FindmembersDocumentRef);
+  console.log("getMemberProfile = ",getMemberProfile);
     
-    if(isEmpty(getMemberProfile)){
-        writeTask = false;
-        const replyMsg = `ขออภัยคุณ${userSaidArray[1]}ยังไม่ได้เปิดการใช้งานบอท คุณ${userSaidArray[1]}โปรดยืนยันตัวตนก่อนนะคะ`;
-        reply(replyToken, replyMsg);
-        replyConfirmButton(groupId);
+  if(isEmpty(getMemberProfile)){
+    writeTask = false;
+    const replyMsg = `ขออภัยคุณ${userSaidArray[1]}ยังไม่ได้เปิดการใช้งานบอท คุณ${userSaidArray[1]}โปรดยืนยันตัวตนก่อนนะคะ`;
+    reply(replyToken, replyMsg);
+    replyConfirmButton(groupId);
+  }
+  else{
+    if(bool){
+      replyCorouselToRoom(groupId,getMemberProfile);
     }
     else{
-      if(bool){
-        replyCorouselToRoom(groupId,getMemberProfile);
-      }
-      else{
-        writeTask = true;
-      }
+      writeTask = true;
     }
-    //<-- End read data part -->
-    return writeTask;
+  }
+  //<-- End read data part -->
+  return writeTask;
 }
 
 const updateMember = function(groupId,userId){
   let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(userId);
   let transaction = db.runTransaction(t => {
-      return t.get(FindmembersDocumentRef)
-        .then(doc => {
-          t.update(FindmembersDocumentRef, {role: "Member"});
+    return t.get(FindmembersDocumentRef)
+      .then(doc => {
+        t.update(FindmembersDocumentRef, {role: "Member"});
           return "UPDATE";
-        });
-    }).then(result => {
-      console.log('Transaction success!');
-      return "OK2";
-    }).catch(err => {
-      console.log('Transaction failure:', err);
-    });
+      });
+  }).then(result => {
+    console.log('Transaction success!');
+    return "OK2";
+  }).catch(err => {
+    console.log('Transaction failure:', err);
+  });
 }
 
 const createTask = async function(replyToken,groupId,userSaid,bool){
   let assigneeIdArray = [];
-    var tasktitle = userSaid.split("#to")[0].trim();
-    if(bool){
-      var AssigneeString = userSaid.split("#to")[1].trim();
-      var assigneeArray = AssigneeString.split(" ");
-      var assigneeName = [];
-      for(i=0;i<assigneeArray.length;i++){
-        assigneeName.push(assigneeArray[i].split('@')[1]);
+  var tasktitle = userSaid.split("#to")[0].trim();
+  if(bool){
+    var AssigneeString = userSaid.split("#to")[1].trim();
+    var assigneeArray = AssigneeString.split(" ");
+    var assigneeName = [];
+    for(i=0;i<assigneeArray.length;i++){
+      assigneeName.push(assigneeArray[i].split('@')[1]);
     }
-      const getAssigneeIdArray = async function(assigneeName){
-        var getAssigneeData = [];
-        assigneeName.forEach((name) => {
-                getAssigneeData.push(db.collection('data').doc(groupId).collection('members')
-                    .where('displayName', '==', name.trim())
-                    .get());
+    const getAssigneeIdArray = async function(assigneeName){
+      var getAssigneeData = [];
+      assigneeName.forEach((name) => {
+        getAssigneeData.push(db.collection('data').doc(groupId).collection('members')
+          .where('displayName', '==', name.trim())
+          .get());
+      })
+      const assigneeIdArray = await Promise.all(getAssigneeData).then((snapshots) => {
+        var assigneeIdArray = [];
+        snapshots.forEach((querySnapshot) => {
+          querySnapshot.docs.map((element) => {
+            assigneeIdArray.push(element.id);
+          })
         })
-        const assigneeIdArray = await Promise.all(getAssigneeData).then((snapshots) => {
-            var assigneeIdArray = [];
-            snapshots.forEach((querySnapshot) => {
-                querySnapshot.docs.map((element) => {
-                  assigneeIdArray.push(element.id);
-                })
-            })
-            return assigneeIdArray;
-        }).catch(err => {
-          console.log('Push failure:', err);
-        });
         return assigneeIdArray;
-      }
-    assigneeIdArray = await getAssigneeIdArray(assigneeName);
+      }).catch(err => {
+        console.log('Push failure:', err);
+      });
+      return assigneeIdArray;
     }
-    let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
-     // <---Write data part-->
-     tasksDocumentRef.add({
-        title: tasktitle,
-        status: "NOT DONE",
-        assignee: assigneeIdArray,
-        datetime: "",
-        createtime: Date.now()
-    })
-    .then(async function(result) {
+    assigneeIdArray = await getAssigneeIdArray(assigneeName);
+  }
+  let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
+  // <---Write data part-->
+  tasksDocumentRef.add({
+    title: tasktitle,
+    status: "NOT DONE",
+    assignee: assigneeIdArray,
+    datetime: "",
+    createtime: Date.now()
+  }).then(async function(result) {
       var date = new Date(Date.now());
       var dateISOString = date.toISOString();
       console.log(dateISOString);
@@ -583,44 +579,21 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
         console.log("Task successfully written!");
         replyDatePicker(replyToken,groupId,result.id,dateLimit);
         return "OK";
-    })
-    .catch(function(error) {
+  }).catch(function(error) {
         console.error("Error writing document: ", error);
-    });
-    // <--End write data part-->
+  });
+  // <--End write data part-->
 }
 
 const updateTask = async function(groupId,taskId,data){
-    let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
-    let transaction = db.runTransaction(t => {
-        return t.get(FindtasksDocumentRef)
-          .then(doc => {
-            t.update(FindtasksDocumentRef, data);
-            return "UPDATE";
-          });
-      }).then(result => {
-        console.log('Transaction success!');
-        return "OK2";
-      }).catch(err => {
-        console.log('Transaction failure:', err);
-      });
-}
-
-const updateTime = function(replyToken,groupId,taskId,datetime){
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
   let transaction = db.runTransaction(t => {
-      return t.get(FindtasksDocumentRef)
-        .then(doc => {
-          // Add one person to the city population.
-          // Note: this could be done without a transaction
-          //       by updating the population using FieldValue.increment()
-          t.update(FindtasksDocumentRef, {datetime: Date.parse(datetime)});
-          return "UPDATE";
-        });
+    return t.get(FindtasksDocumentRef)
+      .then(doc => {
+        t.update(FindtasksDocumentRef, data);
+        return "UPDATE";
+      });
     }).then(result => {
-      const replyMsg = `อัพเดทเวลาเรียบร้อยแล้ว! 
-      พิมพ์ #display เพื่อดูลิสต์`;
-      reply(replyToken,replyMsg);
       console.log('Transaction success!');
       return "OK2";
     }).catch(err => {
@@ -628,13 +601,32 @@ const updateTime = function(replyToken,groupId,taskId,datetime){
     });
 }
 
+const updateTime = function(replyToken,groupId,taskId,datetime){
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
+  let transaction = db.runTransaction(t => {
+    return t.get(FindtasksDocumentRef)
+      .then(doc => {
+        t.update(FindtasksDocumentRef, {datetime: Date.parse(datetime)});
+        return "UPDATE";
+      });
+  }).then(result => {
+    const replyMsg = `อัพเดทเวลาเรียบร้อยแล้ว! 
+    พิมพ์ #display เพื่อดูลิสต์`;
+    reply(replyToken,replyMsg);
+    console.log('Transaction success!');
+    return "OK2";
+  }).catch(err => {
+    console.log('Transaction failure:', err);
+  });
+}
+
 const getTasks = async function(groupId){
-    // <-- Read data from database part -->
-    let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
-    let getTasks = await getTasksData(tasksDocumentRef);
-    console.log("getTasks = ",getTasks);
-    return getTasks;
-    //<-- End read data part -->
+  // <-- Read data from database part -->
+  let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
+  let getTasks = await getTasksData(tasksDocumentRef);
+  console.log("getTasks = ",getTasks);
+  return getTasks;
+  //<-- End read data part -->
 }
 
 const getTaskDetailNotDone = async function(groupId){
@@ -660,23 +652,23 @@ const getYourTask = async function(groupId,userId){
 const deleteTask = function(groupId,taskId){
   let  tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
   tasksDocumentRef.delete()
-  .then(result => {
-    console.log('Delete success!');
-    return "OK2";
-  }).catch(err => {
-    console.log('Delete failure:', err);
-  });
+    .then(result => {
+      console.log('Delete success!');
+      return "OK2";
+    }).catch(err => {
+      console.log('Delete failure:', err);
+    });
 }
 
 const setAdmin = async function(groupId, MakeAdminSplitText){
   let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(MakeAdminSplitText[2]);
   FindmembersDocumentRef.update({role: "Admin"})
-  .then(result => {
-    console.log('Transaction success!');
-    return "OK2";
-  }).catch(err => {
-    console.log('Transaction failure:', err);
-  });
+    .then(result => {
+      console.log('Transaction success!');
+      return "OK2";
+    }).catch(err => {
+      console.log('Transaction failure:', err);
+    });
 }
 
 const ytdTimestamp = function(){
