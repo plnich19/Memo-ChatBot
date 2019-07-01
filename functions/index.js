@@ -673,15 +673,15 @@ const setAdmin = async function(groupId, MakeAdminSplitText){
 }
 
 const ytdTimestamp = function(){
-  var ytd = new Date();
-  var ytd1 = ytd.setDate(ytd.getDate() - 1);
-  var event = new Date(ytd1);
+  var today = new Date();
+  var ytd = today.setDate(today.getDate() - 1);
+  var ytdDate = new Date(ytd);
 
   console.log(event.toUTCString());
   // expected output: Wed, 14 Jun 2017 07:00:00 GMT
-  var ytdmn = event.setHours(0,0,0,0);
-  console.log(ytdmn);
-  return ytdmn;
+  var ytdTimestamp = ytdDate.setHours(0,0,0,0);
+  console.log(ytdTimestamp);
+  return ytdTimestamp;
 }
 
 const tdTimestamp = function(){
