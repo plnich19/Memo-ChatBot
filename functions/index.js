@@ -84,6 +84,16 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
         const ret = { message: 'พังจริง' };
         return res.status(400).send(ret);
       }
+    }else if(action === 'getTaskDetailNotDone'){
+      // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getTaskDetailNotDone&groupId=Ce938b6c2ba40812b0afa36e11078ec56
+      const groupId = req.query.groupId;
+      if(groupId !== undefined){
+        const rtnData =  await getTaskDetailNotDone(groupId);
+        return res.status(200).send(JSON.stringify(rtnData));
+      }else{
+        const ret = { message: 'พังจริง' };
+        return res.status(400).send(ret);
+      }
     }
   }else {
     const ret = { message: 'พัง' };
@@ -165,7 +175,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
             const userId = req.body.events[0].source.userId;
             updateMember(groupId,userId);
         }else if(reqMessage.toLowerCase().includes('gettaskdetail')){
-          const userSaid = req.body.events[0].message.text;
           const groupId = req.body.events[0].source.groupId;
           getTaskDetailNotDone(groupId);
       }
@@ -208,8 +217,8 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         // <--End write data part-->
       }else if(postbackData.includes('Make admin')){
         const groupId = req.body.events[0].source.groupId;
-        const splitText = postbackData.split(" ");
-        setAdmin(groupId,splitText);
+        const MakeAdminSplitText = postbackData.split(" ");
+        setAdmin(groupId,MakeAdminSplitText);
       }else if(postbackData.includes('taskId=')){
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split("=");
@@ -217,10 +226,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         updateTime(replyToken,groupId,splitText[1],datetime);
       }
     }
-
-
-//Call delete data function
-//DeleteUserData(userOneDocumentRef);
 });
 
 const reply = (replyToken,message) => {
@@ -270,9 +275,11 @@ const replyTaskCorouselToRoom = (groupId,TasksArray) => {
           type: 'carousel',
           actions: [],
           columns: TasksArray.map((task) => {
+            var event = new Date(task.datetime);
+            var date = event.toDateString();
             return {
               title: task.title,
-              text: `Status: ${task.status} Date: ${task.datetime}`,
+              text: `Status: ${task.status} Date: ${date}`,
               actions: [
                 {
                   type: "message",
@@ -565,7 +572,6 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
       var dateLimit = `${splitText[0]}T00:00`;
         console.log(dateLimit);
         console.log("Task successfully written!");
-        console.log("result.id = ",result.id);
         replyDatePicker(replyToken,groupId,result.id,dateLimit);
         return "OK";
     })
@@ -626,9 +632,9 @@ const getTasks = async function(groupId){
 //FUNCTION FOR WEBAPP
 const getTaskDetailNotDone = async function(groupId){
   // <-- Read data from database part -->
-  //Replace where(title ==) with task id
-  var date = Date.now();
-  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('status','==','NOT DONE').where('datetime','<=',date);
+  const ytdmn = await ytdTimestamp();
+  const today = await tdTimestamp();
+  let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').where('status','==','NOT DONE').where('datetime','>',ytdmn).where('datetime','<=',today);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   console.log("getTaskDetail = ",getTaskDetail);
   replyTaskCorouselToRoom(groupId,getTaskDetail);
@@ -655,8 +661,8 @@ const deleteTask = function(groupId,taskId){
   });
 }
 
-const setAdmin = async function(groupId, splitText){
-  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(splitText[2]);
+const setAdmin = async function(groupId, MakeAdminSplitText){
+  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').doc(MakeAdminSplitText[2]);
   FindmembersDocumentRef.update({role: "Admin"})
   .then(result => {
     console.log('Transaction success!');
@@ -664,4 +670,25 @@ const setAdmin = async function(groupId, splitText){
   }).catch(err => {
     console.log('Transaction failure:', err);
   });
+}
+
+const ytdTimestamp = function(){
+  var ytd = new Date();
+  var ytd1 = ytd.setDate(ytd.getDate() - 1);
+  var event = new Date(ytd1);
+
+  console.log(event.toUTCString());
+  // expected output: Wed, 14 Jun 2017 07:00:00 GMT
+  var ytdmn = event.setHours(0,0,0,0);
+  console.log(ytdmn);
+  return ytdmn;
+}
+
+const tdTimestamp = function(){
+  var now = new Date(Date.now());
+  console.log(now);
+
+  var today = now.setHours(0,0,0,0);
+  console.log(today);
+  return today;
 }
