@@ -407,7 +407,6 @@ const replyLiff = (replyToken) => {
   });
 };
 
-
 const getUsersData = function(db){
     return db.get()
     .then (snapshot => {
@@ -629,7 +628,6 @@ const updateTime = function(replyToken,groupId,taskId,datetime){
     });
 }
 
-//FUNCTION FOR WEBAPP
 const getTasks = async function(groupId){
     // <-- Read data from database part -->
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
