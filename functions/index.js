@@ -204,6 +204,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
           const userProfile = await getUserProfileById(userId);
           const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
           replyToRoom(groupId,welComeMsg);
+          replyConfirmButton(groupId);
       }else if(reqType === 'memberLeft'){
         const userId = req.body.events[0].left.members[0].userId;
         const groupId = req.body.events[0].source.groupId;
