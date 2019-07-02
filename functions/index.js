@@ -137,11 +137,6 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
     const reqType = req.body.events[0].type;
     const replyToken = req.body.events[0].replyToken;
     const msgType = req.body.events[0].message.type;
-    // console.log("reqType = ",reqType);
-    // console.log("req = ",req);
-    // console.log("req.body = ",req.body);
-    // console.log("events[0] = ", req.body.events[0]);
-    // return res.status(200);
     if(reqType === 'message'){
         if(msgType === 'text'){    
           const reqMessage = req.body.events[0].message.text;
