@@ -136,101 +136,113 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
       
     const reqType = req.body.events[0].type;
     const replyToken = req.body.events[0].replyToken;
+    const msgType = req.body.events[0].message.type;
+    // console.log("reqType = ",reqType);
+    // console.log("req = ",req);
+    // console.log("req.body = ",req.body);
+    // console.log("events[0] = ", req.body.events[0]);
+    // return res.status(200);
     if(reqType === 'message'){
-        const reqMessage = req.body.events[0].message.text;
-        if(reqMessage.toLowerCase() === 'getmember'){
-            const groupId = req.body.events[0].source.groupId;
-            const getUsers = await getMembers(groupId);
-            replyCorouselToRoom(groupId,getUsers);
-        }else if(reqMessage.toLowerCase().includes('getmemberprofile')){
-            const userSaid = req.body.events[0].message.text;
-            const groupId = req.body.events[0].source.groupId;
-            const writeTask = await getMemberProfile(replyToken,groupId,userSaid,true);
-        }else if(reqMessage.toLowerCase().includes('#create')){
-            if(reqMessage.toLowerCase().includes('@')){
-              const userSaid = req.body.events[0].message.text.split('#create')[1];
-              console.log("userSaid = ", userSaid);
+        if(msgType === 'text'){    
+          const reqMessage = req.body.events[0].message.text;
+          if(reqMessage.toLowerCase() === 'getmember'){
               const groupId = req.body.events[0].source.groupId;
-              const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
-              if(writeTask === true){
-                createTask(replyToken,groupId,userSaid,true);
+              const getUsers = await getMembers(groupId);
+              replyCorouselToRoom(groupId,getUsers);
+          }else if(reqMessage.toLowerCase().includes('getmemberprofile')){
+              const userSaid = req.body.events[0].message.text;
+              const groupId = req.body.events[0].source.groupId;
+              const writeTask = await getMemberProfile(replyToken,groupId,userSaid,true);
+          }else if(reqMessage.toLowerCase().includes('#create')){
+              if(reqMessage.toLowerCase().includes('@')){
+                const userSaid = req.body.events[0].message.text.split('#create')[1];
+                console.log("userSaid = ", userSaid);
+                const groupId = req.body.events[0].source.groupId;
+                const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
+                if(writeTask === true){
+                  createTask(replyToken,groupId,userSaid,true);
+                }
               }
-            }
-            else{
-              const userSaid = req.body.events[0].message.text.split("#create")[1];
+              else{
+                const userSaid = req.body.events[0].message.text.split("#create")[1];
+                const groupId = req.body.events[0].source.groupId;
+                createTask(replyToken,groupId,userSaid,false);
+              }
+          }else if(reqMessage.toLowerCase() === 'updatetask'){
               const groupId = req.body.events[0].source.groupId;
-              createTask(replyToken,groupId,userSaid,false);
-            }
-        }else if(reqMessage.toLowerCase() === 'updatetask'){
+              //updateTask(groupId,taskId);
+          }else if(reqMessage.toLowerCase() === 'gettasks' || reqMessage.toLowerCase() === '#display'){
+              replyLiff(replyToken);
+          }else if(reqMessage.toLowerCase() === 'updatemember'){
+              const groupId = req.body.events[0].source.groupId;
+              const userId = req.body.events[0].source.userId;
+              updateMember(groupId,userId);
+          }else if(reqMessage.toLowerCase().includes('gettaskdetail')){
             const groupId = req.body.events[0].source.groupId;
-            //updateTask(groupId,taskId);
-        }else if(reqMessage.toLowerCase() === 'gettasks' || reqMessage.toLowerCase() === '#display'){
-            replyLiff(replyToken);
-        }else if(reqMessage.toLowerCase() === 'updatemember'){
-            const groupId = req.body.events[0].source.groupId;
-            const userId = req.body.events[0].source.userId;
-            updateMember(groupId,userId);
-        }else if(reqMessage.toLowerCase().includes('gettaskdetail')){
+            getTaskDetailNotDone(groupId);
+          } 
+        }
+      }else if(reqType === 'join'){
           const groupId = req.body.events[0].source.groupId;
-          getTaskDetailNotDone(groupId);
-      }
-    }else if(reqType === 'join'){
+          const welComeMsg = `สวัสดีค่ะ นี่คือบอท [ชื่อบอท] ขอบคุณที่ลากเข้ากรุ๊ปนะคะ 
+           คำแนะนำการใช้งาน
+          - สมาชิกในกลุ่มทุกท่านต้องแอดบอทเป็นเพื่อนและกดยืนยันการใช้งานด้านล่าง
+           คำสั่ง 
+          - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
+          - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
+          - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะคะ`;
+          replyToRoom(groupId,welComeMsg);
+          replyConfirmButton(groupId);
+          // const memberIds = await getGroupMemberIds(groupId);
+          // console.log(memberIds);
+      }else if(reqType === 'leave'){
         const groupId = req.body.events[0].source.groupId;
-        const welComeMsg = `สวัสดีค่ะ นี่คือบอท [ชื่อบอท] ขอบคุณที่ลากเข้ากรุ๊ปนะคะ นายท่านสามารถใช้คำสั่งได้ดังนี้ 
-        - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
-        - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
-        - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะคะ
-        ก่อนอื่น ขอให้ทุกท่านกดยืนยันการใช้งานก่อนนะคะ`;
-        replyToRoom(groupId,welComeMsg);
-        replyConfirmButton(groupId);
-        // const memberIds = await getGroupMemberIds(groupId);
-        // console.log(memberIds);
-    }else if(reqType === 'leave'){
-      const groupId = req.body.events[0].source.groupId;
-      DeleteGroupData(groupId);
-    }else if(reqType === 'memberJoined'){
-        const userId = req.body.events[0].joined.members[0].userId;
+        DeleteGroupData(groupId);
+      }else if(reqType === 'memberJoined'){
+          const userId = req.body.events[0].joined.members[0].userId;
+          const groupId = req.body.events[0].source.groupId;
+          const userProfile = await getUserProfileById(userId);
+          const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
+          replyToRoom(groupId,welComeMsg);
+      }else if(reqType === 'memberLeft'){
+        const userId = req.body.events[0].left.members[0].userId;
         const groupId = req.body.events[0].source.groupId;
-        const userProfile = await getUserProfileById(userId);
-        const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
-        replyToRoom(groupId,welComeMsg);
-    }else if(reqType === 'memberLeft'){
-      const userId = req.body.events[0].left.members[0].userId;
-      const groupId = req.body.events[0].source.groupId;
-      DeleteUserData(groupId,userId);
-    }else if(reqType === 'postback'){
-      const postbackData = req.body.events[0].postback.data;
-      if(postbackData === 'confirm'){
-        const groupId = req.body.events[0].source.groupId;
-        const userId = req.body.events[0].source.userId;
-        const userProfile = await getUserProfileById(userId);
-        const welComeMsg = `คุณ ${userProfile.displayName} เข้าร่วมการใช้งานแล้ว`;
-        reply(replyToken,welComeMsg);
-        // <---Write data part-->
-        dataOneDocumentRef.doc(groupId).collection('members').doc(userId).set({
-            displayName: userProfile.displayName,
-            pictureUrl: userProfile.pictureUrl,
-            role: "Member"
-        })
-        .then(function() {
-            console.log("User successfully written!");
-            return "OK";
-        })
-        .catch(function(error) {
-            console.error("Error writing document: ", error);
-        });
-        // <--End write data part-->
-      }else if(postbackData.includes('Make admin')){
-        const groupId = req.body.events[0].source.groupId;
-        const MakeAdminSplitText = postbackData.split(" ");
-        setAdmin(groupId,MakeAdminSplitText);
-      }else if(postbackData.includes('taskId=')){
-        const groupId = req.body.events[0].source.groupId;
-        const splitText = postbackData.split("=");
-        const datetime = req.body.events[0].postback.params.datetime;
-        updateTime(replyToken,groupId,splitText[1],datetime);
-      }
-    }
+        DeleteUserData(groupId,userId);
+      }else if(reqType === 'postback'){
+        const postbackData = req.body.events[0].postback.data;
+        if(postbackData === 'confirm'){
+          const groupId = req.body.events[0].source.groupId;
+          const userId = req.body.events[0].source.userId;
+          const userProfile = await getUserProfileById(userId);
+          const welComeMsg = `คุณ ${userProfile.displayName} เข้าร่วมการใช้งานแล้ว`;
+          reply(replyToken,welComeMsg);
+          // <---Write data part-->
+          dataOneDocumentRef.doc(groupId).collection('members').doc(userId).set({
+              displayName: userProfile.displayName,
+              pictureUrl: userProfile.pictureUrl,
+              role: "Member"
+          })
+          .then(function() {
+              console.log("User successfully written!");
+              return "OK";
+          })
+          .catch(function(error) {
+              console.error("Error writing document: ", error);
+          });
+          // <--End write data part-->
+        }else if(postbackData.includes('Make admin')){
+          const groupId = req.body.events[0].source.groupId;
+          const MakeAdminSplitText = postbackData.split(" ");
+          setAdmin(groupId,MakeAdminSplitText);
+        }else if(postbackData.includes('taskId=')){
+          const groupId = req.body.events[0].source.groupId;
+          const splitText = postbackData.split("=");
+          const datetime = req.body.events[0].postback.params.datetime;
+          updateTime(replyToken,groupId,splitText[1],datetime);
+        }else if(postbackData.includes('cancle')){
+          reply(replyToken, 'task ถูกสร้างขึ้นเรียบร้อยแล้ว พิมพ์ #display เพื่อดูลิสต์ได้เลยค่ะ')
+        }
+      } 
 });
 
 const reply = (replyToken,message) => {
@@ -337,7 +349,7 @@ const replyDatePicker = (replyToken,groupId,taskId,dateLimit) => {
         {
           "type": "postback",
           "label": "Cancle",
-          "data": "action=add&itemid=123"
+          "data": "cancle"
         },
         ]
     }
