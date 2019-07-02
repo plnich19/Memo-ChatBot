@@ -176,9 +176,11 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
       }
     }else if(reqType === 'join'){
         const groupId = req.body.events[0].source.groupId;
-        const welComeMsg = `ขอบคุณที่ลากบอทเข้ากรุ๊ป ท่านสามารถใช้คำสั่งได้ดังนี้ 
-        - #Create new_task_name @name เพื่อสร้าง task ใหม่ หรือจะแค่ #Create new_task_name ก็ได้ 
-        - #display เพื่อให้บอทแสดง task list ของวันนี้ แก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะ`;
+        const welComeMsg = `สวัสดีค่ะ นี่คือบอท [ชื่อบอท] ขอบคุณที่ลากเข้ากรุ๊ปนะคะ นายท่านสามารถใช้คำสั่งได้ดังนี้ 
+        - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
+        - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
+        - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะคะ
+        ก่อนอื่น ขอให้ทุกท่านกดยืนยันการใช้งานก่อนนะคะ`;
         replyToRoom(groupId,welComeMsg);
         replyConfirmButton(groupId);
         // const memberIds = await getGroupMemberIds(groupId);
@@ -305,7 +307,7 @@ const replyConfirmButton = (groupId) =>{
         actions: [
           {
             type: "postback",
-            label: "ตกลง",
+            label: "ยืนยัน",
             data: "confirm"
           }
         ],
