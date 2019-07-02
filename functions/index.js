@@ -245,6 +245,8 @@ const reply = (replyToken,message) => {
     return client.replyMessage(replyToken, {
     type: 'text',
     text: message
+    }).then(()=>{
+      return res.status(200);
     });
 };
 
@@ -252,6 +254,8 @@ const replyToRoom = (groupId,message) => {
     return client.pushMessage(groupId, {
     type: 'text',
     text: message
+    }).then(()=>{
+      return res.status(200);
     });
 };
 
@@ -277,6 +281,8 @@ const replyCorouselToRoom = (groupId,UsersArray) => {
             }
           })
         }
+    }).then(()=>{
+      return res.status(200);
     });
 };
 
@@ -303,6 +309,8 @@ const replyTaskCorouselToRoom = (groupId,TasksArray) => {
             }
           })
         }
+    }).then(()=>{
+      return res.status(200);
     });
 };
 
@@ -322,6 +330,8 @@ const replyConfirmButton = (groupId) =>{
         title: "ยืนยันการใช้งาน",
         text: "คลิกตกลงเพื่อยืนยันตัวตนนะคะ"
       } 
+  }).then(()=>{
+    return res.status(200);
   });
 };
 
@@ -349,6 +359,8 @@ const replyDatePicker = (replyToken,groupId,taskId,dateLimit) => {
         },
         ]
     }
+  }).then(()=>{
+    return res.status(200);
   });
 };
 
@@ -410,6 +422,8 @@ const replyLiff = (replyToken) => {
         ]
       }
     }
+  }).then(()=>{
+    return res.status(200);
   });
 };
 
