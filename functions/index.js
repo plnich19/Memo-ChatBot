@@ -592,17 +592,13 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
         .catch(err => {
           console.log('Error getting document', err);
         });
-      }).then(result => {
+      })
         if(noconfirm){
           const replyMsg = `ขออภัยคุณ${nodata}ยังไม่ได้เปิดการใช้งานบอท คุณ${nodata}โปรดยืนยันตัวตนก่อนนะคะ
           เมื่อยืนยันตัวตนเรียบร้อยแล้ว ให้พิมพ์คำสั่งสร้าง task ใหม่ค่ะ`;
             replyToRoom(groupId, replyMsg);
             replyConfirmButton(groupId);
         }
-        return "noconfirm";
-      }).catch(err => {
-        console.log('Error reply', err);
-      });
       const assigneeIdArray = await Promise.all(getAssigneeData).then((snapshots) => {
         var assigneeIdArray = [];
         snapshots.forEach((querySnapshot) => {
