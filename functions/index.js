@@ -504,7 +504,8 @@ const getMemberProfile = async function(replyToken,groupId,name,bool){
     
   if(isEmpty(getMemberProfile)){
     writeTask = false;
-    const replyMsg = `ขออภัยคุณ${name}ยังไม่ได้เปิดการใช้งานบอท คุณ${name}โปรดยืนยันตัวตนก่อนนะคะ`;
+    const replyMsg = `ขออภัยคุณ${name}ยังไม่ได้เปิดการใช้งานบอท คุณ${name}โปรดยืนยันตัวตนก่อนนะครับ
+    เมื่อคุณ${name}ยืนยันตัวตนแล้ว ให้พิมพ์คำสั่ง #create task ใหม่อีกครั้งครับ`;
     reply(replyToken, replyMsg);
     replyConfirmButton(groupId);
 
@@ -581,28 +582,30 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
   console.log("values =",values);
   console.log("assigneeIdArray = ",assigneeIdArray);
   console.log("writeTaskArray = ",writeTaskArray);
-  let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
-  // <---Write data part-->
-  tasksDocumentRef.add({
-    title: tasktitle,
-    status: "NOT DONE",
-    assignee: assigneeIdArray,
-    datetime: "",
-    createtime: Date.now()
-  }).then(async function(result) {
-      var date = new Date(Date.now());
-      var dateISOString = date.toISOString();
-      console.log(dateISOString);
-      var splitText = dateISOString.split("T");
-      var dateLimit = `${splitText[0]}T00:00`;
-        console.log(dateLimit);
-        console.log("Task successfully written!");
-        replyDatePicker(replyToken,groupId,result.id,dateLimit);
-        return "OK";
-  }).catch(function(error) {
-        console.error("Error writing document: ", error);
-  });
-  // <--End write data part-->
+  if(assigneeIdArray.length === assigneeName.length){
+    let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
+    // <---Write data part-->
+    tasksDocumentRef.add({
+      title: tasktitle,
+      status: "NOT DONE",
+      assignee: assigneeIdArray,
+      datetime: "",
+      createtime: Date.now()
+    }).then(async function(result) {
+        var date = new Date(Date.now());
+        var dateISOString = date.toISOString();
+        console.log(dateISOString);
+        var splitText = dateISOString.split("T");
+        var dateLimit = `${splitText[0]}T00:00`;
+          console.log(dateLimit);
+          console.log("Task successfully written!");
+          replyDatePicker(replyToken,groupId,result.id,dateLimit);
+          return "OK";
+    }).catch(function(error) {
+          console.error("Error writing document: ", error);
+    });
+    // <--End write data part-->
+  }
 }
 
 const updateTask = async function(groupId,taskId,data){
