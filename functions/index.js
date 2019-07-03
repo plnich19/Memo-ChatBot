@@ -141,7 +141,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
       const msgType = req.body.events[0].message.type;
         if(msgType === 'text'){    
           const reqMessage = req.body.events[0].message.text;
-          if(reqMessage.toLowerCase() === 'getmember'){
+          if(reqMessage.toLowerCase() === '#member'){
               const groupId = req.body.events[0].source.groupId;
               const getUsers = await getMembers(groupId);
               replyCorouselToRoom(groupId,getUsers);
