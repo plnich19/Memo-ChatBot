@@ -548,6 +548,7 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     for(i=0;i<assigneeArray.length;i++){
       assigneeName.push(assigneeArray[i].split('@')[1]);
     }
+    console.log("assigneeName = ",assigneeName);
     // const getAssigneeIdArray = async function(assigneeName){
     //   var getAssigneeData = [];
     //   assigneeName.forEach((name) => {
@@ -570,32 +571,36 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     // }
 
     const getAssigneeIdArray = async function(assigneeName){
-      var getAssigneeData = [];
+      let getAssigneeData = [];
       let nodata = [];
       let noconfirm = false;
-      assigneeName.forEach((name) => {
+      await assigneeName.forEach( async function(name) {
+        console.log("name = ",name);
         let getdb = db.collection('data').doc(groupId).collection('members').where('displayName', '==', name.trim());
-        let getdoc = getdb.get()
-        .then(doc => {
-          if (!doc.exists) {
+        let getdoc = await getUsersData(getdb);
+        
+        console.log("getdoc = ",getdoc);
+         
+        if (getdoc.length) {
+            //console.log("doc.id = ", getdoc.id);
+            getAssigneeData.push(getdoc);
+            console.log("getAssigneeData = ", getAssigneeData);
+          }else {
             noconfirm = true;
             getAssigneeData = [];
             nodata.push(name);
             console.log('No such document!');
-          }else {
-            getAssigneeData.push(getdoc);
-            console.log("getAssigneeData = ", getAssigneeData);
-            return getAssigneeData;
+            console.log("nodata = ",nodata);
           }
-          return getAssigneeData;
-        })
-        .catch(err => {
-          console.log('Error getting document', err);
-        });
+          
       })
-        if(noconfirm){
-          const replyMsg = `ขออภัยคุณ${nodata}ยังไม่ได้เปิดการใช้งานบอท คุณ${nodata}โปรดยืนยันตัวตนก่อนนะคะ
+      console.log("nodata.length = ", nodata.length);
+      console.log("getAssigneeData นอก loop = ", getAssigneeData);
+      console.log("noconfirm = ",noconfirm);
+        if(nodata.length){
+          const replyMsg = `ขออภัยคุณ${nodata.join()}ยังไม่ได้เปิดการใช้งานบอท คุณ${nodata.join()}โปรดยืนยันตัวตนก่อนนะคะ
           เมื่อยืนยันตัวตนเรียบร้อยแล้ว ให้พิมพ์คำสั่งสร้าง task ใหม่ค่ะ`;
+          console.log("reply message = ",replyMsg);
             replyToRoom(groupId, replyMsg);
             replyConfirmButton(groupId);
         }
