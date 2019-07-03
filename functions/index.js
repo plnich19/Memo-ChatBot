@@ -180,13 +180,13 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         }
       }else if(reqType === 'join'){
           const groupId = req.body.events[0].source.groupId;
-          const welComeMsg = `สวัสดีค่ะ นี่คือบอท [ชื่อบอท] ขอบคุณที่ลากเข้ากรุ๊ปนะคะ 
-           คำแนะนำการใช้งาน
-          - สมาชิกในกลุ่มทุกท่านต้องแอดบอทเป็นเพื่อนและกดยืนยันการใช้งานด้านล่าง
+          const welComeMsg = `สวัสดีครับ น้องโน๊ตขอขอบคุณที่ท่านแอดน้องโน๊ตเข้ากลุ่ม
+           คำแนะนำการใช้งานน้องโน๊ต
+          - สมาชิกในกลุ่มทุกท่านต้องแอดน้องโน๊ตเป็นเพื่อนและกดยืนยันการใช้งานด้านล่างด้วยครับ
            คำสั่ง 
           - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
           - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
-          - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะคะ`;
+          - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
           replyToRoom(groupId,welComeMsg);
           replyConfirmButton(groupId);
           // const memberIds = await getGroupMemberIds(groupId);
@@ -198,13 +198,29 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
           const userId = req.body.events[0].joined.members[0].userId;
           const groupId = req.body.events[0].source.groupId;
           const userProfile = await getUserProfileById(userId);
-          const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
+          const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}
+          คำแนะนำการใช้งานน้องโน๊ต
+          - คุณ ${userProfile.displayName} โปรดกดยืนยันการใช้งานน้องโน๊ตด้านล่างด้วยนะครับ
+          คำสั่ง
+          - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
+          - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
+          - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
           replyToRoom(groupId,welComeMsg);
           replyConfirmButton(groupId);
       }else if(reqType === 'memberLeft'){
         const userId = req.body.events[0].left.members[0].userId;
         const groupId = req.body.events[0].source.groupId;
         DeleteUserData(groupId,userId);
+      }else if(reqType === 'follow'){
+        const groupId = req.body.events[0].source.userId;
+        const welComeMsg = `สวัสดีครับ นี่คือน้องโน๊ตเองครับ 
+         คำแนะนำการใช้งาน
+        - แอดน้องโน๊ตเข้ากลุ่มเพื่อใช้งานนะครับ
+         คำสั่ง 
+        - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
+        - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
+        - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
+        reply(replyToken,welComeMsg);
       }else if(reqType === 'postback'){
         const postbackData = req.body.events[0].postback.data;
         if(postbackData === 'confirm'){
