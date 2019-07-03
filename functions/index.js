@@ -24,7 +24,8 @@ var dataOneDocumentRef = db.collection('data');
 exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res) => {
 
   res.set('Access-Control-Allow-Origin', "*");
-  res.set('Access-Control-Allow-Methods', 'GET, POST');
+  res.set('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
   
   console.log('req',req);
   console.log('query',req.query);
@@ -136,8 +137,8 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
       
     const reqType = req.body.events[0].type;
     const replyToken = req.body.events[0].replyToken;
-    const msgType = req.body.events[0].message.type;
     if(reqType === 'message'){
+      const msgType = req.body.events[0].message.type;
         if(msgType === 'text'){    
           const reqMessage = req.body.events[0].message.text;
           if(reqMessage.toLowerCase() === 'getmember'){
@@ -153,10 +154,10 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
                 const userSaid = req.body.events[0].message.text.split('#create')[1];
                 console.log("userSaid = ", userSaid);
                 const groupId = req.body.events[0].source.groupId;
-                const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
-                if(writeTask === true){
+                //const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
+                //if(writeTask === true){
                   createTask(replyToken,groupId,userSaid,true);
-                }
+                //}
               }
               else{
                 const userSaid = req.body.events[0].message.text.split("#create")[1];
@@ -245,8 +246,6 @@ const reply = (replyToken,message) => {
     return client.replyMessage(replyToken, {
     type: 'text',
     text: message
-    }).then(()=>{
-      return res.status(200);
     });
 };
 
@@ -254,8 +253,6 @@ const replyToRoom = (groupId,message) => {
     return client.pushMessage(groupId, {
     type: 'text',
     text: message
-    }).then(()=>{
-      return res.status(200);
     });
 };
 
@@ -281,8 +278,6 @@ const replyCorouselToRoom = (groupId,UsersArray) => {
             }
           })
         }
-    }).then(()=>{
-      return res.status(200);
     });
 };
 
@@ -309,8 +304,6 @@ const replyTaskCorouselToRoom = (groupId,TasksArray) => {
             }
           })
         }
-    }).then(()=>{
-      return res.status(200);
     });
 };
 
@@ -330,13 +323,11 @@ const replyConfirmButton = (groupId) =>{
         title: "ยืนยันการใช้งาน",
         text: "คลิกตกลงเพื่อยืนยันตัวตนนะคะ"
       } 
-  }).then(()=>{
-    return res.status(200);
   });
 };
 
 const replyDatePicker = (replyToken,groupId,taskId,dateLimit) => {
-  return client.replyMessage(replyToken, {
+  return client.pushMessage(groupId, {
     "type": "template",
     "altText": "This is a buttons template",
     "template": {
@@ -359,8 +350,6 @@ const replyDatePicker = (replyToken,groupId,taskId,dateLimit) => {
         },
         ]
     }
-  }).then(()=>{
-    return res.status(200);
   });
 };
 
@@ -422,8 +411,6 @@ const replyLiff = (replyToken) => {
         ]
       }
     }
-  }).then(()=>{
-    return res.status(200);
   });
 };
 
@@ -499,7 +486,7 @@ const getMembers = async function(groupId){
     //<-- End read data part -->
 }
 
-const getMemberProfile = async function(replyToken,groupId,userSaid,bool){
+const getMemberProfile = async function(replyToken,groupId,name,bool){
   var writeTask = true;
   const isEmpty = function(obj) {
     for(var key in obj) {
@@ -508,22 +495,24 @@ const getMemberProfile = async function(replyToken,groupId,userSaid,bool){
     }
     return true;
   }
-  var userSaidArray = userSaid.split("@");
-  console.log("(getMemberProfile) userSaidArray = ",userSaidArray);
+  // var userSaidArray = userSaid.split("@");
+  // console.log("(getMemberProfile) userSaidArray = ",userSaidArray);
   // <-- Read data from database part -->
-  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',userSaidArray[1].trim());
+  let FindmembersDocumentRef = db.collection('data').doc(groupId).collection('members').where('displayName','==',name.trim());
   let getMemberProfile = await getUsersData(FindmembersDocumentRef);
   console.log("getMemberProfile = ",getMemberProfile);
     
   if(isEmpty(getMemberProfile)){
     writeTask = false;
-    const replyMsg = `ขออภัยคุณ${userSaidArray[1]}ยังไม่ได้เปิดการใช้งานบอท คุณ${userSaidArray[1]}โปรดยืนยันตัวตนก่อนนะคะ`;
+    const replyMsg = `ขออภัยคุณ${name}ยังไม่ได้เปิดการใช้งานบอท คุณ${name}โปรดยืนยันตัวตนก่อนนะคะ`;
     reply(replyToken, replyMsg);
     replyConfirmButton(groupId);
+
   }
   else{
     if(bool){
-      replyCorouselToRoom(groupId,getMemberProfile);
+      console.log("อะไรไม่รู้วววววววว");
+      //replyCorouselToRoom(groupId,getMemberProfile);
     }
     else{
       writeTask = true;
@@ -551,6 +540,8 @@ const updateMember = function(groupId,userId){
 
 const createTask = async function(replyToken,groupId,userSaid,bool){
   let assigneeIdArray = [];
+  var writeTask;
+  var writeTaskArray = [];
   var tasktitle = userSaid.split("#to")[0].trim();
   if(bool){
     var AssigneeString = userSaid.split("#to")[1].trim();
@@ -561,10 +552,14 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     }
     const getAssigneeIdArray = async function(assigneeName){
       var getAssigneeData = [];
-      assigneeName.forEach((name) => {
-        getAssigneeData.push(db.collection('data').doc(groupId).collection('members')
+      assigneeName.forEach(async(name) => {
+        writeTask = getMemberProfile(replyToken,groupId,name,true);
+        writeTaskArray.push(writeTask);
+        let getdb = db.collection('data').doc(groupId).collection('members')
           .where('displayName', '==', name.trim())
-          .get());
+          .get();
+          getAssigneeData.push(getdb);
+          console.log("getAssigneeData = ",getAssigneeData);
       })
       const assigneeIdArray = await Promise.all(getAssigneeData).then((snapshots) => {
         var assigneeIdArray = [];
@@ -577,10 +572,15 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
       }).catch(err => {
         console.log('Push failure:', err);
       });
-      return assigneeIdArray;
+      return [assigneeIdArray,writeTaskArray];
     }
-    assigneeIdArray = await getAssigneeIdArray(assigneeName);
+    values = await getAssigneeIdArray(assigneeName);
+    assigneeIdArray = values[0];
+    writeTaskArray = values[1];
   }
+  console.log("values =",values);
+  console.log("assigneeIdArray = ",assigneeIdArray);
+  console.log("writeTaskArray = ",writeTaskArray);
   let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
   // <---Write data part-->
   tasksDocumentRef.add({
