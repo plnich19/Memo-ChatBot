@@ -166,7 +166,6 @@ exports.Chatbot = functions
           const userSaid = req.body.events[0].message.text;
           const groupId = req.body.events[0].source.groupId;
           const writeTask = await getMemberProfile(
-            replyToken,
             groupId,
             userSaid,
             true
@@ -552,7 +551,7 @@ const getMembers = async function(groupId) {
   //<-- End read data part -->
 };
 
-const getMemberProfile = async function(replyToken, groupId, name, bool) {
+const getMemberProfile = async function(groupId, name, bool) {
   var writeTask = true;
   const isEmpty = function(obj) {
     for (var key in obj) {
@@ -575,7 +574,7 @@ const getMemberProfile = async function(replyToken, groupId, name, bool) {
     writeTask = false;
     const replyMsg = `ขออภัยคุณ${name}ยังไม่ได้เปิดการใช้งานบอท คุณ${name}โปรดยืนยันตัวตนก่อนนะครับ
     เมื่อคุณ${name}ยืนยันตัวตนแล้ว ให้พิมพ์คำสั่ง #create task ใหม่อีกครั้งครับ`;
-    replyToRoom(group, replyMsg);
+    replyToRoom(groupId, replyMsg);
     replyConfirmButton(groupId);
   } else {
     if (bool) {
@@ -624,6 +623,7 @@ const createTask = async function(replyToken, groupId, userSaid, bool) {
     const getAssigneeIdArray = async function(assigneeName) {
       var getAssigneeData = [];
       assigneeName.forEach(async name => {
+        getMemberProfile(groupId,name,false);
         let getdb = db
           .collection("data")
           .doc(groupId)
