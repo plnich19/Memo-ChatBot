@@ -130,9 +130,10 @@ exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req
 });
 
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
-      
     const reqType = req.body.events[0].type;
+    console.log("reqType = ",reqType);
     const replyToken = req.body.events[0].replyToken;
+    console.log("replyToken = ",replyToken);
     if(reqType === 'message'){
       const msgType = req.body.events[0].message.type;
         if(msgType === 'text'){    
@@ -150,10 +151,7 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
                 const userSaid = req.body.events[0].message.text.split('#create')[1];
                 console.log("userSaid = ", userSaid);
                 const groupId = req.body.events[0].source.groupId;
-                //const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
-                //if(writeTask === true){
                   createTask(replyToken,groupId,userSaid,true);
-                //}
               }
               else{
                 const userSaid = req.body.events[0].message.text.split("#create")[1];
