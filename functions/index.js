@@ -115,21 +115,28 @@ exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req
     if (action !== undefined ) {
     let GroupsArray = await getGroupIds(dataOneDocumentRef);
     console.log("groupsArray = ",GroupsArray);
+    var today = new Date(Date.now());
+    var day = today.getDay();
+    if(day === 0 || day === 6){
+        console.log("not weekday");
+    }else{ 
       if(action === 'broadcastTogroup'){
         GroupsArray.map((groupId) => {
           return replyToRoom(groupId,message);
         });
-        return res.status(200).send('ผ่าน');
-      }else if(action === 'broadcastLiff'){
-        GroupsArray.map((groupId) => {
-        return replyLiff(groupId,message);
-      });
       return res.status(200).send('ผ่าน');
-      }
-    } else {
-      const ret = { message: 'พัง' };
-      return res.status(400).send(ret);
+      }else if(action === 'broadcastLiff'){
+          GroupsArray.map((groupId) => {
+          return replyLiff(groupId,message);
+      });
+    return res.status(200).send('ผ่าน');
     }
+  }
+ }else {
+  const ret = { message: 'action parameter missing' };
+  return res.status(400).send(ret);
+}
+     
     
 });
 
