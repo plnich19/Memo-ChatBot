@@ -59,7 +59,7 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
         const rtnData =  await updateTask(groupId,taskId,data);
         return res.status(200).send(JSON.stringify(rtnData));
       }else{
-        const ret = { message: 'พังจริง' };
+        const ret = { message: 'updateTask failed' };
         return res.status(400).send(ret);
       }
     }else if(action === 'deleteTask'){
@@ -614,14 +614,14 @@ const updateTask = async function(groupId,taskId,data){
     return t.get(FindtasksDocumentRef)
       .then(doc => {
         t.update(FindtasksDocumentRef, data);
-        return "UPDATE";
+        return doc;
+      }).then(result => {
+        console.log('Transaction success!');
+        return result;
+      }).catch(err => {
+        console.log('Transaction failure:', err);
       });
-    }).then(result => {
-      console.log('Transaction success!');
-      return "OK2";
-    }).catch(err => {
-      console.log('Transaction failure:', err);
-    });
+    })
 }
 
 const updateTime = function(replyToken,groupId,taskId,datetime){
