@@ -104,27 +104,25 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/CronEndpoint/?action=fruit&message=ไปเอาผลไม้จ้า
 exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req, res) => {
   
-    console.log('req',req);
-    console.log('query',req.query);
+    // console.log('req',req);
+    // console.log('query',req.query);
     const action = req.query.action;
     const message = req.query.message;
+    // console.log('typeofm',typeof message);
+    // console.log('message',message);
     if (action !== undefined ) {
-      if(action === 'fruit'){
-        return request({
-          method: `POST`,
-          uri: `https://notify-api.line.me/api/notify`,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Bearer bfGLqBR6AizJRwLORuf70f0UeoNlLrU02JTX5ReCBIr`
-          },
-          body: `message=${message}`
-        }).then(() => {
-          const ret = { message: 'Done' };
-          return res.status(200).send(ret);
-        }).catch((error) => {
-          const ret = { message: `Sending error: ${error}` };
-          return res.status(500).send(ret);
+    let GroupsArray = await getGroupIds(dataOneDocumentRef);
+    console.log("groupsArray = ",GroupsArray);
+      if(action === 'broadcastTogroup'){
+        GroupsArray.map((groupId) => {
+          return replyToRoom(groupId,message);
         });
+        return res.status(200).send('ผ่าน');
+      }else if(action === 'broadcastLiff'){
+        GroupsArray.map((groupId) => {
+        return replyLiff(groupId,message);
+      });
+      return res.status(200).send('ผ่าน');
       }
     } else {
       const ret = { message: 'พัง' };
@@ -134,14 +132,18 @@ exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req
 });
 
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
-      
     const reqType = req.body.events[0].type;
+    console.log("reqType = ",reqType);
     const replyToken = req.body.events[0].replyToken;
+    console.log("replyToken = ",replyToken);
     if(reqType === 'message'){
       const msgType = req.body.events[0].message.type;
         if(msgType === 'text'){    
-          const reqMessage = req.body.events[0].message.text;
-          if(reqMessage.toLowerCase() === 'getmember'){
+          let reqMessage = req.body.events[0].message.text || '';
+          if(reqMessage !== ''){
+            reqMessage = reqMessage.replace('#Create','#create');
+          }
+          if(reqMessage.toLowerCase() === '#member'){
               const groupId = req.body.events[0].source.groupId;
               const getUsers = await getMembers(groupId);
               replyCorouselToRoom(groupId,getUsers);
@@ -149,18 +151,15 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               const userSaid = req.body.events[0].message.text;
               const groupId = req.body.events[0].source.groupId;
               const writeTask = await getMemberProfile(replyToken,groupId,userSaid,true);
-          }else if(reqMessage.toLowerCase().includes('#create')){
-              if(reqMessage.toLowerCase().includes('@')){
-                const userSaid = req.body.events[0].message.text.split('#create')[1];
+          }else if(reqMessage.includes('#create')){
+              if(reqMessage.includes('@')){
+                const userSaid = reqMessage.split('#create')[1];
                 console.log("userSaid = ", userSaid);
                 const groupId = req.body.events[0].source.groupId;
-                //const writeTask = await getMemberProfile(replyToken,groupId,userSaid,false);
-                //if(writeTask === true){
-                  createTask(replyToken,groupId,userSaid,true);
-                //}
+                createTask(replyToken,groupId,userSaid,true);
               }
               else{
-                const userSaid = req.body.events[0].message.text.split("#create")[1];
+                const userSaid = reqMessage.split("#create")[1];
                 const groupId = req.body.events[0].source.groupId;
                 createTask(replyToken,groupId,userSaid,false);
               }
@@ -180,13 +179,13 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
         }
       }else if(reqType === 'join'){
           const groupId = req.body.events[0].source.groupId;
-          const welComeMsg = `สวัสดีค่ะ นี่คือบอท [ชื่อบอท] ขอบคุณที่ลากเข้ากรุ๊ปนะคะ 
-           คำแนะนำการใช้งาน
-          - สมาชิกในกลุ่มทุกท่านต้องแอดบอทเป็นเพื่อนและกดยืนยันการใช้งานด้านล่าง
+          const welComeMsg = `สวัสดีครับ น้องโน๊ตขอขอบคุณที่ท่านแอดน้องโน๊ตเข้ากลุ่ม
+           คำแนะนำการใช้งานน้องโน๊ต
+          - สมาชิกในกลุ่มทุกท่านต้องแอดน้องโน๊ตเป็นเพื่อนและกดยืนยันการใช้งานด้านล่างด้วยครับ
            คำสั่ง 
           - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
           - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
-          - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะคะ`;
+          - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
           replyToRoom(groupId,welComeMsg);
           replyConfirmButton(groupId);
           // const memberIds = await getGroupMemberIds(groupId);
@@ -198,13 +197,29 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
           const userId = req.body.events[0].joined.members[0].userId;
           const groupId = req.body.events[0].source.groupId;
           const userProfile = await getUserProfileById(userId);
-          const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}`;
+          const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}
+          คำแนะนำการใช้งานน้องโน๊ต
+          - คุณ ${userProfile.displayName} โปรดกดยืนยันการใช้งานน้องโน๊ตด้านล่างด้วยนะครับ
+          คำสั่ง
+          - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
+          - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
+          - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
           replyToRoom(groupId,welComeMsg);
           replyConfirmButton(groupId);
       }else if(reqType === 'memberLeft'){
         const userId = req.body.events[0].left.members[0].userId;
         const groupId = req.body.events[0].source.groupId;
         DeleteUserData(groupId,userId);
+      }else if(reqType === 'follow'){
+        const groupId = req.body.events[0].source.userId;
+        const welComeMsg = `สวัสดีครับ นี่คือน้องโน๊ตเองครับ 
+         คำแนะนำการใช้งาน
+        - แอดน้องโน๊ตเข้ากลุ่มเพื่อใช้งานนะครับ
+         คำสั่ง 
+        - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
+        - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
+        - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
+        reply(replyToken,welComeMsg);
       }else if(reqType === 'postback'){
         const postbackData = req.body.events[0].postback.data;
         if(postbackData === 'confirm'){
@@ -353,8 +368,8 @@ const replyDatePicker = (replyToken,groupId,taskId,dateLimit) => {
   });
 };
 
-const replyLiff = (replyToken) => {
-  return client.replyMessage(replyToken, {
+const replyLiff = (groupId,message) => {
+  return client.pushMessage(groupId, {
     "type": "flex",
     "altText": "Flex Message",
     "contents": {
@@ -376,7 +391,7 @@ const replyLiff = (replyToken) => {
                 "contents": [
                   {
                     "type": "text",
-                    "text": "กดดูลิสต์ข้างล่างได้เลย!",
+                    "text": message,
                     "flex": 5,
                     "size": "sm",
                     "color": "#666666",
@@ -453,6 +468,23 @@ const getTasksData = function(db){
   })
 };
 
+const getGroupIds = function(db){
+  return db.get()
+  .then (snapshot => {
+    let GroupsArray = [];
+    snapshot.forEach(doc => {
+    const data = doc.data();
+      console.log('getGroupsData = ',doc.id, '=>', data);
+
+      GroupsArray.push(
+       doc.id
+      );
+    });
+
+    return GroupsArray;
+})
+}
+
 const getUserProfileById = function(userId) {
   return client.getProfile(userId)
           .catch((err) => {
@@ -506,7 +538,7 @@ const getMemberProfile = async function(replyToken,groupId,name,bool){
     writeTask = false;
     const replyMsg = `ขออภัยคุณ${name}ยังไม่ได้เปิดการใช้งานบอท คุณ${name}โปรดยืนยันตัวตนก่อนนะครับ
     เมื่อคุณ${name}ยืนยันตัวตนแล้ว ให้พิมพ์คำสั่ง #create task ใหม่อีกครั้งครับ`;
-    reply(replyToken, replyMsg);
+    replyToRoom(group, replyMsg);
     replyConfirmButton(groupId);
 
   }
@@ -541,21 +573,17 @@ const updateMember = function(groupId,userId){
 
 const createTask = async function(replyToken,groupId,userSaid,bool){
   let assigneeIdArray = [];
-  var writeTask;
-  var writeTaskArray = [];
+  var assigneeName = [];
   var tasktitle = userSaid.split("#to")[0].trim();
   if(bool){
     var AssigneeString = userSaid.split("#to")[1].trim();
     var assigneeArray = AssigneeString.split(" ");
-    var assigneeName = [];
     for(i=0;i<assigneeArray.length;i++){
       assigneeName.push(assigneeArray[i].split('@')[1]);
     }
     const getAssigneeIdArray = async function(assigneeName){
       var getAssigneeData = [];
       assigneeName.forEach(async(name) => {
-        writeTask = getMemberProfile(replyToken,groupId,name,true);
-        writeTaskArray.push(writeTask);
         let getdb = db.collection('data').doc(groupId).collection('members')
           .where('displayName', '==', name.trim())
           .get();
@@ -573,15 +601,10 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
       }).catch(err => {
         console.log('Push failure:', err);
       });
-      return [assigneeIdArray,writeTaskArray];
+      return assigneeIdArray;
     }
-    values = await getAssigneeIdArray(assigneeName);
-    assigneeIdArray = values[0];
-    writeTaskArray = values[1];
+    assigneeIdArray = await getAssigneeIdArray(assigneeName);
   }
-  console.log("values =",values);
-  console.log("assigneeIdArray = ",assigneeIdArray);
-  console.log("writeTaskArray = ",writeTaskArray);
   if(assigneeIdArray.length === assigneeName.length){
     let tasksDocumentRef = db.collection('data').doc(groupId).collection('tasks');
     // <---Write data part-->
@@ -677,9 +700,10 @@ const deleteTask = function(groupId,taskId){
   tasksDocumentRef.delete()
     .then(result => {
       console.log('Delete success!');
-      return "OK2";
+      return "Delete Success!";
     }).catch(err => {
       console.log('Delete failure:', err);
+      return "Delete Failure!";
     });
 }
 
