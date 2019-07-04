@@ -109,23 +109,19 @@ exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req
     const action = req.query.action;
     const message = req.query.message;
     if (action !== undefined ) {
-      if(action === 'fruit'){
-        return request({
-          method: `POST`,
-          uri: `https://notify-api.line.me/api/notify`,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Bearer bfGLqBR6AizJRwLORuf70f0UeoNlLrU02JTX5ReCBIr`
-          },
-          body: `message=${message}`
-        }).then(() => {
-          const ret = { message: 'Done' };
-          return res.status(200).send(ret);
-        }).catch((error) => {
-          const ret = { message: `Sending error: ${error}` };
-          return res.status(500).send(ret);
+    let GroupsArray = await getGroupIds(dataOneDocumentRef);
+    console.log("groupsArray = ",GroupsArray);
+      if(action === 'broadcastTogroup'){
+        GroupsArray.map((groupId) => {
+          return replyToRoom(groupId,message);
         });
-      }
+        return res.status(200).send('ผ่าน');
+      }else if(action === 'broadcastLiff'){
+        GroupsArray.map((groupId) => {
+        return replyLiff(groupId,message);
+      });
+      return res.status(200).send('ผ่าน');
+    }
     } else {
       const ret = { message: 'พัง' };
       return res.status(400).send(ret);
@@ -369,8 +365,8 @@ const replyDatePicker = (replyToken,groupId,taskId,dateLimit) => {
   });
 };
 
-const replyLiff = (replyToken) => {
-  return client.replyMessage(replyToken, {
+const replyLiff = (groupId,message) => {
+  return client.pushMessage(groupId, {
     "type": "flex",
     "altText": "Flex Message",
     "contents": {
@@ -392,7 +388,7 @@ const replyLiff = (replyToken) => {
                 "contents": [
                   {
                     "type": "text",
-                    "text": "กดดูลิสต์ข้างล่างได้เลย!",
+                    "text": message,
                     "flex": 5,
                     "size": "sm",
                     "color": "#666666",
@@ -468,6 +464,23 @@ const getTasksData = function(db){
       return TasksArray;
   })
 };
+
+const getGroupIds = function(db){
+  return db.get()
+  .then (snapshot => {
+    let GroupsArray = [];
+    snapshot.forEach(doc => {
+    const data = doc.data();
+      console.log('getGroupsData = ',doc.id, '=>', data);
+
+      GroupsArray.push(
+       doc.id
+      );
+    });
+
+    return GroupsArray;
+})
+}
 
 const getUserProfileById = function(userId) {
   return client.getProfile(userId)
