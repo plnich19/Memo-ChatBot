@@ -24,7 +24,7 @@ var dataOneDocumentRef = db.collection('data');
 exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res) => {
 
   res.set('Access-Control-Allow-Origin', "*");
-  res.set('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.set('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept');
   
   console.log('req',req);
@@ -57,9 +57,15 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
       const data = req.body;
       if(groupId !== undefined || taskId !== undefined ){
         const rtnData =  await updateTask(groupId,taskId,data);
-        return res.status(200).send(JSON.stringify(rtnData));
+        // console.log('updateTask rtnData',rtnData);
+        if(rtnData){
+          return res.status(200).send(JSON.stringify({'result':rtnData}));
+        }else{
+          const ret = { message: 'updateTask failed' };
+        return res.status(400).send(ret);
+        }
       }else{
-        const ret = { message: 'updateTask failed' };
+        const ret = { message: 'updateTask missing parameters' };
         return res.status(400).send(ret);
       }
     }else if(action === 'deleteTask'){
@@ -610,16 +616,21 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
 
 const updateTask = async function(groupId,taskId,data){
   let FindtasksDocumentRef = db.collection('data').doc(groupId).collection('tasks').doc(taskId);
-  let transaction = db.runTransaction(t => {
+  return transaction = db.runTransaction(t => {
     return t.get(FindtasksDocumentRef)
       .then(doc => {
-        t.update(FindtasksDocumentRef, data);
-        return doc;
+        const oldData = doc.data();
+        let newData = Object.assign({}, oldData, data);
+        if(t.update(FindtasksDocumentRef, newData)){
+          return newData;
+        }
+        return false;
       }).then(result => {
-        console.log('Transaction success!');
+        console.log('Transaction success!',result);
         return result;
       }).catch(err => {
         console.log('Transaction failure:', err);
+        return false;
       });
     })
 }
