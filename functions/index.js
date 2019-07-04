@@ -110,12 +110,8 @@ exports.DataAPI = functions.region('asia-east2').https.onRequest(async (req, res
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/CronEndpoint/?action=fruit&message=ไปเอาผลไม้จ้า
 exports.CronEndpoint = functions.region('asia-east2').https.onRequest(async (req, res) => {
   
-    // console.log('req',req);
-    // console.log('query',req.query);
     const action = req.query.action;
     const message = req.query.message;
-    // console.log('typeofm',typeof message);
-    // console.log('message',message);
     if (action !== undefined ) {
     let GroupsArray = await getGroupIds(dataOneDocumentRef);
     console.log("groupsArray = ",GroupsArray);
