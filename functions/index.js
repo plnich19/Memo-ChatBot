@@ -169,7 +169,8 @@ exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res
               const groupId = req.body.events[0].source.groupId;
               //updateTask(groupId,taskId);
           }else if(reqMessage.toLowerCase() === 'gettasks' || reqMessage.toLowerCase() === '#display'){
-              replyLiff(replyToken);
+              const groupId = req.body.events[0].source.groupId;
+              replyLiff(groupId,'กดดูลิสต์ข้างล่างได้เลย!');
           }else if(reqMessage.toLowerCase() === 'updatemember'){
               const groupId = req.body.events[0].source.groupId;
               const userId = req.body.events[0].source.userId;
@@ -612,7 +613,7 @@ const createTask = async function(replyToken,groupId,userSaid,bool){
     // <---Write data part-->
     tasksDocumentRef.add({
       title: tasktitle,
-      status: "NOT DONE",
+      status: false,
       assignee: assigneeIdArray,
       datetime: "",
       createtime: Date.now()
