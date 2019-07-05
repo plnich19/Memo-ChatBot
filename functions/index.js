@@ -209,7 +209,7 @@ exports.Chatbot = functions
           - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
           - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
       replyToRoom(groupId, welComeMsg);
-      replyConfirmButton(groupId);
+      replyConfirmButton(replyToken);
       // const memberIds = await getGroupMemberIds(groupId);
       // console.log(memberIds);
     } else if (reqType === "leave") {
@@ -229,7 +229,7 @@ exports.Chatbot = functions
           - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
           - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
       replyToRoom(groupId, welComeMsg);
-      replyConfirmButton(groupId);
+      replyConfirmButton(replyToken);
     } else if (reqType === "memberLeft") {
       const userId = req.body.events[0].left.members[0].userId;
       const groupId = req.body.events[0].source.groupId;
@@ -355,8 +355,8 @@ const replyTaskCorouselToRoom = (groupId, TasksArray) => {
   });
 };
 
-const replyConfirmButton = groupId => {
-  return client.pushMessage(groupId, {
+const replyConfirmButton = replyToken => {
+  return client.replyMessage(replyToken, {
     type: "template",
     altText: "this is a buttons template",
     template: {
@@ -680,7 +680,7 @@ const createTask = async function(replyToken, groupId, userSaid, bool) {
       });
     // <--End write data part-->
   }else{
-    replyConfirmButton(groupId);
+    replyConfirmButton(replyToken);
   }
 };
 
