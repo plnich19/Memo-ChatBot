@@ -165,11 +165,7 @@ exports.Chatbot = functions
         } else if (reqMessage.toLowerCase().includes("getmemberprofile")) {
           const userSaid = req.body.events[0].message.text;
           const groupId = req.body.events[0].source.groupId;
-          const writeTask = await getMemberProfile(
-            groupId,
-            userSaid,
-            true
-          );
+          const writeTask = await getMemberProfile(groupId, userSaid, true);
         } else if (reqMessage.includes("#create")) {
           if (reqMessage.includes("@")) {
             const userSaid = reqMessage.split("#create")[1];
@@ -222,8 +218,8 @@ exports.Chatbot = functions
       const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}
           คำแนะนำการใช้งานน้องโน๊ต
           - คุณ ${
-            userProfile.displayName
-          } โปรดกดยืนยันการใช้งานน้องโน๊ตด้านล่างด้วยนะครับ
+        userProfile.displayName
+        } โปรดกดยืนยันการใช้งานน้องโน๊ตด้านล่างด้วยนะครับ
           คำสั่ง
           - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
           - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
@@ -252,7 +248,7 @@ exports.Chatbot = functions
         const userProfile = await getUserProfileById(userId);
         const welComeMsg = `คุณ ${
           userProfile.displayName
-        } เข้าร่วมการใช้งานแล้ว`;
+          } เข้าร่วมการใช้งานแล้ว`;
         reply(replyToken, welComeMsg);
         // <---Write data part-->
         dataOneDocumentRef
@@ -462,7 +458,7 @@ const replyLiff = (groupId, message) => {
   });
 };
 
-const getUsersData = function(db) {
+const getUsersData = function (db) {
   return db.get().then(snapshot => {
     let UsersArray = [];
     snapshot.forEach(doc => {
@@ -480,7 +476,7 @@ const getUsersData = function(db) {
   });
 };
 
-const getTasksData = function(db) {
+const getTasksData = function (db) {
   return db.get().then(snapshot => {
     let TasksArray = [];
     snapshot.forEach(doc => {
@@ -499,7 +495,7 @@ const getTasksData = function(db) {
   });
 };
 
-const getGroupIds = function(db) {
+const getGroupIds = function (db) {
   return db.get().then(snapshot => {
     let GroupsArray = [];
     snapshot.forEach(doc => {
@@ -513,19 +509,19 @@ const getGroupIds = function(db) {
   });
 };
 
-const getUserProfileById = function(userId) {
+const getUserProfileById = function (userId) {
   return client.getProfile(userId).catch(err => {
     console.log("getUserProfile err", err);
   });
 };
 
-const getGroupMemberIds = function(userId) {
+const getGroupMemberIds = function (userId) {
   return client.getGroupMemberIds(userId).catch(err => {
     console.log("getGroupMemberIds err", err);
   });
 };
 
-const DeleteUserData = function(groupId, userId) {
+const DeleteUserData = function (groupId, userId) {
   let membersDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -534,12 +530,12 @@ const DeleteUserData = function(groupId, userId) {
   return membersDocumentRef.delete();
 };
 
-const DeleteGroupData = function(groupId) {
+const DeleteGroupData = function (groupId) {
   let groupDocumentRef = db.collection("data").doc(groupId);
   return groupDocumentRef.delete();
 };
 
-const getMembers = async function(groupId) {
+const getMembers = async function (groupId) {
   // <-- Read data from database part -->
   let membersDocumentRef = db
     .collection("data")
@@ -551,9 +547,9 @@ const getMembers = async function(groupId) {
   //<-- End read data part -->
 };
 
-const getMemberProfile = async function(groupId, name, bool) {
+const getMemberProfile = async function (groupId, name, bool) {
   var writeTask = true;
-  const isEmpty = function(obj) {
+  const isEmpty = function (obj) {
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) return false;
     }
@@ -588,7 +584,7 @@ const getMemberProfile = async function(groupId, name, bool) {
   return writeTask;
 };
 
-const updateMember = function(groupId, userId) {
+const updateMember = function (groupId, userId) {
   let FindmembersDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -610,7 +606,7 @@ const updateMember = function(groupId, userId) {
     });
 };
 
-const createTask = async function(replyToken, groupId, userSaid, bool) {
+const createTask = async function (replyToken, groupId, userSaid, bool) {
   let assigneeIdArray = [];
   var assigneeName = [];
   var tasktitle = userSaid.split("#to")[0].trim();
@@ -620,10 +616,10 @@ const createTask = async function(replyToken, groupId, userSaid, bool) {
     for (i = 0; i < assigneeArray.length; i++) {
       assigneeName.push(assigneeArray[i].split("@")[1]);
     }
-    const getAssigneeIdArray = async function(assigneeName) {
+    const getAssigneeIdArray = async function (assigneeName) {
       var getAssigneeData = [];
       assigneeName.forEach(async name => {
-        getMemberProfile(groupId,name,false);
+        getMemberProfile(groupId, name, false);
         let getdb = db
           .collection("data")
           .doc(groupId)
@@ -679,12 +675,12 @@ const createTask = async function(replyToken, groupId, userSaid, bool) {
         console.error("Error writing document: ", error);
       });
     // <--End write data part-->
-  }else{
+  } else {
     replyConfirmButton(replyToken);
   }
 };
 
-const updateTask = async function(groupId, taskId, data) {
+const updateTask = async function (groupId, taskId, data) {
   let FindtasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -712,7 +708,7 @@ const updateTask = async function(groupId, taskId, data) {
   }));
 };
 
-const updateTime = function(replyToken, groupId, taskId, datetime) {
+const updateTime = function (replyToken, groupId, taskId, datetime) {
   let FindtasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -737,7 +733,7 @@ const updateTime = function(replyToken, groupId, taskId, datetime) {
     });
 };
 
-const getTasks = async function(groupId) {
+const getTasks = async function (groupId) {
   // <-- Read data from database part -->
   let tasksDocumentRef = db
     .collection("data")
@@ -749,7 +745,7 @@ const getTasks = async function(groupId) {
   //<-- End read data part -->
 };
 
-const getTaskDetailNotDone = async function(groupId) {
+const getTaskDetailNotDone = async function (groupId) {
   // <-- Read data from database part -->
   const ytdmn = await ytdTimestamp();
   const today = await tdTimestamp();
@@ -766,7 +762,7 @@ const getTaskDetailNotDone = async function(groupId) {
   //<-- End read data part -->
 };
 
-const getYourTask = async function(groupId, userId) {
+const getYourTask = async function (groupId, userId) {
   // <-- Read data from database part -->
   let FindtasksDocumentRef = db
     .collection("data")
@@ -779,7 +775,7 @@ const getYourTask = async function(groupId, userId) {
   //<-- End read data part -->
 };
 
-const deleteTask = function(groupId, taskId) {
+const deleteTask = function (groupId, taskId) {
   let tasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -797,7 +793,7 @@ const deleteTask = function(groupId, taskId) {
     });
 };
 
-const setAdmin = async function(groupId, MakeAdminSplitText) {
+const setAdmin = async function (groupId, MakeAdminSplitText) {
   let FindmembersDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -813,7 +809,7 @@ const setAdmin = async function(groupId, MakeAdminSplitText) {
     });
 };
 
-const ytdTimestamp = function() {
+const ytdTimestamp = function () {
   var today = new Date();
   var ytd = today.setDate(today.getDate() - 1);
   var ytdDate = new Date(ytd);
@@ -823,7 +819,7 @@ const ytdTimestamp = function() {
   return ytdTimestamp;
 };
 
-const tdTimestamp = function() {
+const tdTimestamp = function () {
   var now = new Date(Date.now());
   console.log(now);
   var today = now.setHours(0, 0, 0, 0);
