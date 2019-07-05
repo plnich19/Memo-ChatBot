@@ -136,6 +136,14 @@ exports.CronEndpoint = functions
             return replyLiff(groupId, message);
           });
           return res.status(200).send("ผ่าน");
+        }else if (action === "personalNotice") {
+          const ret = { message: "OK" };
+          console.log("groupsArray = ", GroupsArray);
+          GroupsArray.map(async groupId => {
+            const ret = await getTaskDetailDueDate(groupId);
+            console.log("ret = ",ret);
+          });
+        return res.status(200).send(ret);          
         }
       }
     } else {
@@ -400,7 +408,7 @@ const replyDatePicker = (replyToken, groupId, taskId, dateLimit) => {
 const replyLiff = (groupId, message) => {
   return client.pushMessage(groupId, {
     type: "flex",
-    altText: "Flex Message",
+    altText: message,
     contents: {
       type: "bubble",
       body: {
@@ -753,14 +761,41 @@ const getTaskDetailNotDone = async function (groupId) {
     .collection("data")
     .doc(groupId)
     .collection("tasks")
-    .where("status", "==", "NOT DONE")
-    .where("datetime", ">", yesterday)
-    .where("datetime", "<=", today);
+    .where("status", "==", false)
+    .where("datetime", ">=", yesterday)
+    .where("datetime", "<", today);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   console.log("getTaskDetail = ", getTaskDetail);
-  replyTaskCorouselToRoom(groupId, getTaskDetail);
+  return getTaskDetail;
   //<-- End read data part -->
 };
+
+const getTaskDetailDueDate = async function (groupId) {
+  console.log("groupID = ",groupId);
+  // <-- Read data from database part -->
+  var UsersArray = [];
+  const yesterday = await ytdTimestamp();
+  const today = await tdTimestamp();
+  const anHourLater = await anHourLaterTimestamp();
+  console.log("anHourLater = ",anHourLater);
+  let FindtasksDocumentRef = db
+    .collection("data")
+    .doc(groupId)
+    .collection("tasks")
+    .where("status", "==", false)
+    .where("datetime", ">=", yesterday)
+    .where("datetime", "<", today);
+  let getTaskDetail = await getTasksData(FindtasksDocumentRef);
+  //console.log("getTaskDetail = ", getTaskDetail);
+  await getTaskDetail.map(task => {
+    if(task.datetime === anHourLater);
+    console.log("task.datetime === anHourLater");
+      UsersArray.push(task.assignee);
+  });
+  console.log("UsersArray = ",UsersArray);
+  return UsersArray;   
+  //<-- End read data part -->};
+}
 
 //NEWEST FUNCTION DO NEXT WEEK
 // const getTaskDetailbyDate = async function (groupId,datetime) {
@@ -825,21 +860,25 @@ const setAdmin = async function (groupId, MakeAdminSplitText) {
 };
 
 const ytdTimestamp = function () {
-  var today = new Date();
-  var ytd = today.setDate(today.getDate() - 1);
-  var ytdDate = new Date(ytd);
-  console.log(ytdDate.toUTCString());
-  var ytdTimestamp = ytdDate.setHours(0, 0, 0, 0);
-  console.log(ytdTimestamp);
+  var ytd = new Date();
+  // var ytd = today.setDate(today.getDate() - 1);
+  // var ytdDate = new Date(ytd);
+  //console.log(ytd.toUTCString());
+  var ytdTimestamp = ytd.setUTCHours(0, 0, 0, 0);
+  //console.log(new Date(ytdTimestamp).toUTCString());
+  //console.log(ytdTimestamp);
   return ytdTimestamp;
 };
 
 const tdTimestamp = function () {
-  var now = new Date(Date.now());
-  console.log(now);
-  var today = now.setHours(0, 0, 0, 0);
-  console.log(today);
-  return today;
+  var td = new Date();
+  var today = td.setDate(td.getDate() + 1);
+  var tdDate = new Date(today);
+  //console.log(tdDate.toUTCString());
+  var tdTimestamp = td.setUTCHours(0, 0, 0, 0);
+  //console.log(new Date(tdTimestamp).toUTCString());
+  //console.log(tdTimestamp);
+  return tdTimestamp;
 };
 
 // const dateTimestamp = function (datetime) {
@@ -849,3 +888,17 @@ const tdTimestamp = function () {
 //   console.log(today);
 //   return today;
 // };
+
+const anHourLaterTimestamp = function () {
+  const HOUR = 1000 * 60 * 60;
+  //console.log(Date.now());
+  var anHourAgo = Date.now() + HOUR;
+  var anD = new Date(new Date(anHourAgo));
+  var anDP = Date.parse(anD);
+  //console.log(anD.toUTCString());
+   var anHourAgo2 = new Date(anDP).setMinutes(0);
+   var anHourAgo3 = new Date(anHourAgo2).setSeconds(0);
+    //console.log(anHourAgo2);
+  console.log(new Date(anHourAgo3));
+  return anHourAgo3;
+};
