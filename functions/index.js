@@ -747,14 +747,14 @@ const getTasks = async function (groupId) {
 
 const getTaskDetailNotDone = async function (groupId) {
   // <-- Read data from database part -->
-  const ytdmn = await ytdTimestamp();
+  const yesterday = await ytdTimestamp();
   const today = await tdTimestamp();
   let FindtasksDocumentRef = db
     .collection("data")
     .doc(groupId)
     .collection("tasks")
     .where("status", "==", "NOT DONE")
-    .where("datetime", ">", ytdmn)
+    .where("datetime", ">", yesterday)
     .where("datetime", "<=", today);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   console.log("getTaskDetail = ", getTaskDetail);
