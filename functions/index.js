@@ -762,6 +762,21 @@ const getTaskDetailNotDone = async function (groupId) {
   //<-- End read data part -->
 };
 
+//NEWEST FUNCTION DO NEXT WEEK
+// const getTaskDetailbyDate = async function (groupId,datetime) {
+//   // <-- Read data from database part -->
+//   const date = await ytdTimestamp();
+//   let FindtasksDocumentRef = db
+//     .collection("data")
+//     .doc(groupId)
+//     .collection("tasks")
+//     .where("datetime", "==", date);
+//   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
+//   console.log("getTaskDetail = ", getTaskDetail);
+//   replyTaskCorouselToRoom(groupId, getTaskDetail);
+//   //<-- End read data part -->
+// };
+
 const getYourTask = async function (groupId, userId) {
   // <-- Read data from database part -->
   let FindtasksDocumentRef = db
@@ -826,3 +841,11 @@ const tdTimestamp = function () {
   console.log(today);
   return today;
 };
+
+// const dateTimestamp = function (datetime) {
+//   var now = new Date(Date.now());
+//   console.log(now);
+//   var today = now.setHours(0, 0, 0, 0);
+//   console.log(today);
+//   return today;
+// };
