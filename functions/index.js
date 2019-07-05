@@ -575,7 +575,7 @@ const getMemberProfile = async function(groupId, name, bool) {
     const replyMsg = `ขออภัยคุณ${name}ยังไม่ได้เปิดการใช้งานบอท คุณ${name}โปรดยืนยันตัวตนก่อนนะครับ
     เมื่อคุณ${name}ยืนยันตัวตนแล้ว ให้พิมพ์คำสั่ง #create task ใหม่อีกครั้งครับ`;
     replyToRoom(groupId, replyMsg);
-    replyConfirmButton(groupId);
+    // replyConfirmButton(groupId);
   } else {
     if (bool) {
       console.log("อะไรไม่รู้วววววววว");
@@ -679,6 +679,8 @@ const createTask = async function(replyToken, groupId, userSaid, bool) {
         console.error("Error writing document: ", error);
       });
     // <--End write data part-->
+  }else{
+    replyConfirmButton(groupId);
   }
 };
 
