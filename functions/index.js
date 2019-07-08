@@ -179,10 +179,7 @@ exports.CronEndpoint = functions
               const TasksArray = await getTaskDetailDueDate(groupId);
               console.log("ret = ", TasksArray);
               TasksArray.map(task => {
-                //console.log("task.title = ",task.title);
                 task.userId.map(userId => {
-                  //console.log("task.title = ",task.title);
-                  //console.log("userId = ",userId);
                   return replyToRoom(
                     userId,
                     `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
@@ -673,8 +670,7 @@ const getMemberProfile = async function (groupId, name, bool) {
     // replyConfirmButton(groupId);
   } else {
     if (bool) {
-      console.log("อะไรไม่รู้วววววววว");
-      //replyCorouselToRoom(groupId,getMemberProfile);
+      replyCorouselToRoom(groupId,getMemberProfile);
     } else {
       writeTask = true;
     }
@@ -953,7 +949,7 @@ const setAdmin = async function (groupId, MakeAdminSplitText) {
   FindmembersDocumentRef.update({ role: "Admin" })
     .then(result => {
       console.log("Transaction success!");
-      return "OK2";
+      return "Role updated";
     })
     .catch(err => {
       console.log("Transaction failure:", err);
