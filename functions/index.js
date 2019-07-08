@@ -890,12 +890,13 @@ const getTaskDetailDueDate = async function (groupId) {
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   //console.log("getTaskDetail = ", getTaskDetail);
   await getTaskDetail.map(task => {
-    if (task.datetime === anHourLater);
-    console.log("task.datetime === anHourLater");
-    UsersArray.push({
-      userId: task.assignee,
-      title: task.title
-    });
+    if (task.datetime === anHourLater) {
+      console.log(task.datetime, "===", anHourLater);
+      UsersArray.push({
+        userId: task.assignee,
+        title: task.title
+      });
+    }
   });
   console.log("UsersArray = ", UsersArray);
   return UsersArray;
