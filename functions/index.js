@@ -105,6 +105,18 @@ exports.DataAPI = functions
           const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
+      }else if (action === "getTaskDetailbyDate") {
+        // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getTaskDetailbyDate&groupId=Ce938b6c2ba40812b0afa36e11078ec56&datetime=timestamp
+        const groupId = req.query.groupId;
+        const datetime = Number(req.query.datetime);
+        console.log("datetime = ",datetime);
+        if (groupId !== undefined || datetime !== undefined) {
+          const rtnData = await getTaskDetailbyDate(groupId,datetime);
+          return res.status(200).send(JSON.stringify(rtnData));
+        } else {
+          const ret = { message: "พังจริง" };
+          return res.status(400).send(ret);
+        }
       }
     } else {
       const ret = { message: "พัง" };
@@ -797,20 +809,21 @@ const getTaskDetailDueDate = async function (groupId) {
   //<-- End read data part -->};
 }
 
-//NEWEST FUNCTION DO NEXT WEEK
-// const getTaskDetailbyDate = async function (groupId,datetime) {
-//   // <-- Read data from database part -->
-//   const date = await ytdTimestamp();
-//   let FindtasksDocumentRef = db
-//     .collection("data")
-//     .doc(groupId)
-//     .collection("tasks")
-//     .where("datetime", "==", date);
-//   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
-//   console.log("getTaskDetail = ", getTaskDetail);
-//   replyTaskCorouselToRoom(groupId, getTaskDetail);
-//   //<-- End read data part -->
-// };
+const getTaskDetailbyDate = async function (groupId,datetime) {
+  // <-- Read data from database part -->
+  const yesterday = await ytdTimestampbyDate(datetime);
+  const today = await tdTimestampbyDate(datetime);
+  let FindtasksDocumentRef = db
+    .collection("data")
+    .doc(groupId)
+    .collection("tasks")
+    .where("datetime", ">=", yesterday)
+    .where("datetime", "<", today);
+  let getTaskDetail = await getTasksData(FindtasksDocumentRef);
+  console.log("getTaskDetail = ", getTaskDetail);
+  return getTaskDetail;
+  //<-- End read data part -->
+};
 
 const getYourTask = async function (groupId, userId) {
   // <-- Read data from database part -->
@@ -873,7 +886,7 @@ const ytdTimestamp = function () {
 const tdTimestamp = function () {
   var td = new Date();
   var today = td.setDate(td.getDate() + 1);
-  var tdDate = new Date(today);
+  //var tdDate = new Date(today);
   //console.log(tdDate.toUTCString());
   var tdTimestamp = td.setUTCHours(0, 0, 0, 0);
   //console.log(new Date(tdTimestamp).toUTCString());
@@ -881,13 +894,24 @@ const tdTimestamp = function () {
   return tdTimestamp;
 };
 
-// const dateTimestamp = function (datetime) {
-//   var now = new Date(Date.now());
-//   console.log(now);
-//   var today = now.setHours(0, 0, 0, 0);
-//   console.log(today);
-//   return today;
-// };
+const ytdTimestampbyDate = function (datetime) {
+  var date = new Date(datetime);
+  console.log(date);
+  var ytdTimestampbyDate = date.setHours(0, 0, 0, 0);
+  console.log(ytdTimestampbyDate);
+  return ytdTimestampbyDate;
+};
+
+const tdTimestampbyDate = function (datetime) {
+  var td = new Date(datetime);
+  var today = td.setDate(td.getDate() + 1);
+  //var tdDate = new Date(today);
+  //console.log(tdDate.toUTCString());
+  var tdTimestampbyDate = td.setUTCHours(0, 0, 0, 0);
+  //console.log(new Date(tdTimestamp).toUTCString());
+  //console.log(tdTimestamp);
+  return tdTimestampbyDate;
+};
 
 const anHourLaterTimestamp = function () {
   const HOUR = 1000 * 60 * 60;
