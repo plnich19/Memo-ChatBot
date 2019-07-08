@@ -579,12 +579,6 @@ const getGroupMemberIds = function (userId) {
   });
 };
 
-// const getNumberOfMessagesSentThisMonth = function () {
-//   return client.getNumberOfMessagesSentThisMonth().catch(err => {
-//     console.log("getNumberOfMessagesSentThisMonth err", err);
-//   });
-// };
-
 const getTargetLimitForAdditionalMessages = bodyResponse => {
   return request({
     method: `GET`,
