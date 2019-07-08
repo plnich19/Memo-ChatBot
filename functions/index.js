@@ -110,13 +110,13 @@ exports.DataAPI = functions
           const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
-      }else if (action === "getTaskDetailbyDate") {
+      } else if (action === "getTaskDetailbyDate") {
         // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getTaskDetailbyDate&groupId=Ce938b6c2ba40812b0afa36e11078ec56&datetime=timestamp
         const groupId = req.query.groupId;
         const datetime = Number(req.query.datetime);
-        console.log("datetime = ",datetime);
+        console.log("datetime = ", datetime);
         if (groupId !== undefined || datetime !== undefined) {
-          const rtnData = await getTaskDetailbyDate(groupId,datetime);
+          const rtnData = await getTaskDetailbyDate(groupId, datetime);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
           const ret = { message: "พังจริง" };
@@ -178,18 +178,23 @@ exports.CronEndpoint = functions
             GroupsArray.map(async groupId => {
               const ret = await getTaskDetailDueDate(groupId);
               console.log("ret = ", ret);
-              ret.map(task =>{
+              ret.map(task => {
                 //console.log("task.title = ",task.title);
-                task.userId.map(userId =>{
+                task.userId.map(userId => {
                   //console.log("task.title = ",task.title);
                   //console.log("userId = ",userId);
-                  return replyToRoom(userId,`น้องโน๊ตมาเตือนว่าคุณมีงาน ${task.title} ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!ค`);
-                })
-              })
+                  return replyToRoom(
+                    userId,
+                    `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
+                    task.title
+                    } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!ค`
+                  );
+                });
+              });
             });
             return res.status(200).send(ret);
           }
-         }
+        }
       }
     } else {
       const ret = { message: "action parameter missing" };
@@ -897,7 +902,7 @@ const getTaskDetailDueDate = async function (groupId) {
   //<-- End read data part -->};
 };
 
-const getTaskDetailbyDate = async function (groupId,datetime) {
+const getTaskDetailbyDate = async function (groupId, datetime) {
   // <-- Read data from database part -->
   const yesterday = await ytdTimestampbyDate(datetime);
   const today = await tdTimestampbyDate(datetime);
