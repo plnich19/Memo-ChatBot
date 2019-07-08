@@ -176,9 +176,9 @@ exports.CronEndpoint = functions
             const ret = { message: "OK" };
             console.log("groupsArray = ", GroupsArray);
             GroupsArray.map(async groupId => {
-              const ret = await getTaskDetailDueDate(groupId);
-              console.log("ret = ", ret);
-              ret.map(task => {
+              const TasksArray = await getTaskDetailDueDate(groupId);
+              console.log("ret = ", TasksArray);
+              TasksArray.map(task => {
                 //console.log("task.title = ",task.title);
                 task.userId.map(userId => {
                   //console.log("task.title = ",task.title);
@@ -192,7 +192,7 @@ exports.CronEndpoint = functions
                 });
               });
             });
-            return res.status(200).send(ret);
+            return res.status(200).send(TasksArray);
           }
         }
       }
@@ -869,7 +869,7 @@ const getTaskDetailNotDone = async function (groupId) {
 const getTaskDetailDueDate = async function (groupId) {
   console.log("groupID = ", groupId);
   // <-- Read data from database part -->
-  var UsersArray = [];
+  var TasksArray = [];
   const yesterday = await ytdTimestamp();
   const today = await tdTimestamp();
   const anHourLater = await anHourLaterTimestamp();
@@ -886,14 +886,14 @@ const getTaskDetailDueDate = async function (groupId) {
   await getTaskDetail.map(task => {
     if (task.datetime === anHourLater) {
       console.log(task.datetime, "===", anHourLater);
-      UsersArray.push({
+      TasksArray.push({
         userId: task.assignee,
         title: task.title
       });
     }
   });
-  console.log("UsersArray = ", UsersArray);
-  return UsersArray;
+  console.log("UsersArray = ", TasksArray);
+  return TasksArray;
   //<-- End read data part -->};
 };
 
