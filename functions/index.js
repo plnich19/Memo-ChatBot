@@ -13,6 +13,10 @@ const config = {
 // create LINE SDK client
 const client = new line.Client(config);
 
+const getLINE_HEADER = {
+  Authorization: "Bearer HTK6RpxiRFtlIMDl7s+Klz4WEGz8r0GInSc6ms02dPpWwugI73tRSd/hoKAunXm6KFGBsEVpeTsdwxu9AIRxFaMB+VhJiiKYPEY9Bd3vDP5qYK8X/P1lT/N+kvq01BDfK+ZP7LFniduqFxcRhZgL8AdB04t89/1O/w1cDnyilFU="
+}
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://memo-chatbot.firebaseio.com"
@@ -119,31 +123,47 @@ exports.CronEndpoint = functions
     const action = req.query.action;
     const message = req.query.message;
     if (action !== undefined) {
+      let getTargetLimit = await getTargetLimitForAdditionalMessages().then(res => {
+        return res.value;
+      }).catch((error) => {
+        console.log('error', error);
+      });
+      let getNumberMsg = await getNumberOfMessagesSentThisMonth().then(res => {
+        return res.totalUsage;
+      }).catch((error) => {
+        console.log('error', error);
+      });
+      let remain = getTargetLimit - getNumberMsg;
       let GroupsArray = await getGroupIds(dataOneDocumentRef);
-      console.log("groupsArray = ", GroupsArray);
-      var today = new Date(Date.now());
-      var day = today.getDay();
-      if (day === 0 || day === 6) {
-        console.log("not weekday");
-      } else {
-        if (action === "broadcastTogroup") {
-          GroupsArray.map(groupId => {
-            return replyToRoom(groupId, message);
-          });
-          return res.status(200).send("ผ่าน");
-        } else if (action === "broadcastLiff") {
-          GroupsArray.map(groupId => {
-            return replyLiff(groupId, message);
-          });
-          return res.status(200).send("ผ่าน");
-        }else if (action === "personalNotice") {
-          const ret = { message: "OK" };
-          console.log("groupsArray = ", GroupsArray);
-          GroupsArray.map(async groupId => {
-            const ret = await getTaskDetailDueDate(groupId);
-            console.log("ret = ",ret);
-          });
-        return res.status(200).send(ret);          
+      let MembersCount = await getMembersLength(GroupsArray);
+      var TotalMembers = Math.max(...MembersCount);
+      let MsgUse = TotalMembers + getNumberMsg;
+      
+      if(remain > MsgUse){
+        var today = new Date(Date.now());
+        var day = today.getDay();
+        if (day === 0 || day === 6) {
+          console.log("not weekday");
+        } else {
+          if (action === "broadcastTogroup") {
+            GroupsArray.map(groupId => {
+              return replyToRoom(groupId, message);
+            });
+            return res.status(200).send("ผ่าน");
+          } else if (action === "broadcastLiff") {
+            GroupsArray.map(groupId => {
+              return replyLiff(groupId, message);
+            });
+            return res.status(200).send("ผ่าน");
+          }else if (action === "personalNotice") {
+            const ret = { message: "OK" };
+            console.log("groupsArray = ", GroupsArray);
+            GroupsArray.map(async groupId => {
+              const ret = await getTaskDetailDueDate(groupId);
+              console.log("ret = ",ret);
+            });
+          return res.status(200).send(ret);          
+          }
         }
       }
     } else {
@@ -529,6 +549,34 @@ const getGroupMemberIds = function (userId) {
   });
 };
 
+// const getNumberOfMessagesSentThisMonth = function () {
+//   return client.getNumberOfMessagesSentThisMonth().catch(err => {
+//     console.log("getNumberOfMessagesSentThisMonth err", err);
+//   });
+// };
+
+const getTargetLimitForAdditionalMessages = (bodyResponse) => {
+  return request({
+    method: `GET`,
+    uri: `https://api.line.me/v2/bot/message/quota`,
+    headers: getLINE_HEADER,
+    json: true
+  }).then(response => {
+    return response;
+  });
+};
+
+const getNumberOfMessagesSentThisMonth = (bodyResponse) => {
+  return request({
+    method: `GET`,
+    uri: `https://api.line.me/v2/bot/message/quota/consumption`,
+    headers: getLINE_HEADER,
+    json: true
+  }).then(response => {
+    return response;
+  });
+};
+
 const DeleteUserData = function (groupId, userId) {
   let membersDocumentRef = db
     .collection("data")
@@ -553,6 +601,25 @@ const getMembers = async function (groupId) {
   console.log("(getMembers) getUsers = ", getUsers);
   return getUsers;
   //<-- End read data part -->
+};
+
+const getMembersLength = async function (GroupsArray) {
+  var MembersCount = 0;
+  console.log("type of MembersCount = ",typeof(MembersCount));
+  
+  const total = GroupsArray.map(async groupId => {
+    const getUsers = await getMembers(groupId);
+    console.log("getUsers = ",getUsers);
+    var size = Number(Object.keys(getUsers).length);
+    console.log("size = ",size);
+    console.log("type of size = ",typeof(size));
+    MembersCount = MembersCount + size;
+    console.log("MembersCount ใน map = ",MembersCount);
+    return MembersCount;
+  })
+  const total2 = await Promise.all(total);
+  console.log("MembersCount นอก map = ",total2);
+  return total2;
 };
 
 const getMemberProfile = async function (groupId, name, bool) {
@@ -622,7 +689,9 @@ const createTask = async function (replyToken, groupId, userSaid, bool) {
     var AssigneeString = userSaid.split("#to")[1].trim();
     var assigneeArray = AssigneeString.split(" ");
     for (i = 0; i < assigneeArray.length; i++) {
-      assigneeName.push(assigneeArray[i].split("@")[1]);
+      if(assigneeArray[i].includes("@")){
+        assigneeName.push(assigneeArray[i].split("@")[1]);
+      }
     }
     const getAssigneeIdArray = async function (assigneeName) {
       var getAssigneeData = [];
@@ -717,6 +786,9 @@ const updateTask = async function (groupId, taskId, data) {
 };
 
 const updateTime = function (replyToken, groupId, taskId, datetime) {
+  var dateParse = Date.parse(datetime);
+  const HOUR = 7 * 1000 * 60 * 60;
+  let datetimeUpdate = dateParse - HOUR;
   let FindtasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -725,7 +797,7 @@ const updateTime = function (replyToken, groupId, taskId, datetime) {
   let transaction = db
     .runTransaction(t => {
       return t.get(FindtasksDocumentRef).then(doc => {
-        t.update(FindtasksDocumentRef, { datetime: Date.parse(datetime) });
+        t.update(FindtasksDocumentRef, { datetime: datetimeUpdate });
         return "UPDATE";
       });
     })
@@ -902,3 +974,4 @@ const anHourLaterTimestamp = function () {
   console.log(new Date(anHourAgo3));
   return anHourAgo3;
 };
+
