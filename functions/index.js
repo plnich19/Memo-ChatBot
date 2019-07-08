@@ -172,15 +172,23 @@ exports.CronEndpoint = functions
               return replyLiff(groupId, message);
             });
             return res.status(200).send("ผ่าน");
-          } //else if (action === "personalNotice") {
-        //     const ret = { message: "OK" };
-        //     console.log("groupsArray = ", GroupsArray);
-        //     GroupsArray.map(async groupId => {
-        //       const ret = await getTaskDetailDueDate(groupId);
-        //       console.log("ret = ", ret);
-        //     });
-        //     return res.status(200).send(ret);
-        //   }
+          } else if (action === "personalNotice") {
+            const ret = { message: "OK" };
+            console.log("groupsArray = ", GroupsArray);
+            GroupsArray.map(async groupId => {
+              const ret = await getTaskDetailDueDate(groupId);
+              console.log("ret = ", ret);
+              ret.map(task =>{
+                //console.log("task.title = ",task.title);
+                task.userId.map(userId =>{
+                  //console.log("task.title = ",task.title);
+                  //console.log("userId = ",userId);
+                  return replyToRoom(userId,`น้องโน๊ตมาเตือนว่าคุณมีงาน ${task.title} ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!ค`);
+                })
+              })
+            });
+            return res.status(200).send(ret);
+          }
          }
       }
     } else {
@@ -859,32 +867,35 @@ const getTaskDetailNotDone = async function (groupId) {
   //<-- End read data part -->
 };
 
-// const getTaskDetailDueDate = async function (groupId) {
-//   console.log("groupID = ", groupId);
-//   // <-- Read data from database part -->
-//   var UsersArray = [];
-//   const yesterday = await ytdTimestamp();
-//   const today = await tdTimestamp();
-//   const anHourLater = await anHourLaterTimestamp();
-//   console.log("anHourLater = ", anHourLater);
-//   let FindtasksDocumentRef = db
-//     .collection("data")
-//     .doc(groupId)
-//     .collection("tasks")
-//     .where("status", "==", false)
-//     .where("datetime", ">=", yesterday)
-//     .where("datetime", "<", today);
-//   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
-//   //console.log("getTaskDetail = ", getTaskDetail);
-//   await getTaskDetail.map(task => {
-//     if (task.datetime === anHourLater);
-//     console.log("task.datetime === anHourLater");
-//     UsersArray.push(task.assignee);
-//   });
-//   console.log("UsersArray = ", UsersArray);
-//   return UsersArray;
-//   //<-- End read data part -->};
-// };
+const getTaskDetailDueDate = async function (groupId) {
+  console.log("groupID = ", groupId);
+  // <-- Read data from database part -->
+  var UsersArray = [];
+  const yesterday = await ytdTimestamp();
+  const today = await tdTimestamp();
+  const anHourLater = await anHourLaterTimestamp();
+  console.log("anHourLater = ", anHourLater);
+  let FindtasksDocumentRef = db
+    .collection("data")
+    .doc(groupId)
+    .collection("tasks")
+    .where("status", "==", false)
+    .where("datetime", ">=", yesterday)
+    .where("datetime", "<", today);
+  let getTaskDetail = await getTasksData(FindtasksDocumentRef);
+  //console.log("getTaskDetail = ", getTaskDetail);
+  await getTaskDetail.map(task => {
+    if (task.datetime === anHourLater);
+    console.log("task.datetime === anHourLater");
+    UsersArray.push({
+      userId: task.assignee,
+      title: task.title
+    });
+  });
+  console.log("UsersArray = ", UsersArray);
+  return UsersArray;
+  //<-- End read data part -->};
+};
 
 const getTaskDetailbyDate = async function (groupId,datetime) {
   // <-- Read data from database part -->
