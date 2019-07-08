@@ -14,8 +14,9 @@ const config = {
 const client = new line.Client(config);
 
 const getLINE_HEADER = {
-  Authorization: "Bearer HTK6RpxiRFtlIMDl7s+Klz4WEGz8r0GInSc6ms02dPpWwugI73tRSd/hoKAunXm6KFGBsEVpeTsdwxu9AIRxFaMB+VhJiiKYPEY9Bd3vDP5qYK8X/P1lT/N+kvq01BDfK+ZP7LFniduqFxcRhZgL8AdB04t89/1O/w1cDnyilFU="
-}
+  Authorization:
+    "Bearer HTK6RpxiRFtlIMDl7s+Klz4WEGz8r0GInSc6ms02dPpWwugI73tRSd/hoKAunXm6KFGBsEVpeTsdwxu9AIRxFaMB+VhJiiKYPEY9Bd3vDP5qYK8X/P1lT/N+kvq01BDfK+ZP7LFniduqFxcRhZgL8AdB04t89/1O/w1cDnyilFU="
+};
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -123,23 +124,27 @@ exports.CronEndpoint = functions
     const action = req.query.action;
     const message = req.query.message;
     if (action !== undefined) {
-      let getTargetLimit = await getTargetLimitForAdditionalMessages().then(res => {
-        return res.value;
-      }).catch((error) => {
-        console.log('error', error);
-      });
-      let getNumberMsg = await getNumberOfMessagesSentThisMonth().then(res => {
-        return res.totalUsage;
-      }).catch((error) => {
-        console.log('error', error);
-      });
+      let getTargetLimit = await getTargetLimitForAdditionalMessages()
+        .then(res => {
+          return res.value;
+        })
+        .catch(error => {
+          console.log("error", error);
+        });
+      let getNumberMsg = await getNumberOfMessagesSentThisMonth()
+        .then(res => {
+          return res.totalUsage;
+        })
+        .catch(error => {
+          console.log("error", error);
+        });
       let remain = getTargetLimit - getNumberMsg;
       let GroupsArray = await getGroupIds(dataOneDocumentRef);
       let MembersCount = await getMembersLength(GroupsArray);
       var TotalMembers = Math.max(...MembersCount);
       let MsgUse = TotalMembers + getNumberMsg;
-      
-      if(remain > MsgUse){
+
+      if (remain >= MsgUse) {
         var today = new Date(Date.now());
         var day = today.getDay();
         if (day === 0 || day === 6) {
@@ -155,14 +160,14 @@ exports.CronEndpoint = functions
               return replyLiff(groupId, message);
             });
             return res.status(200).send("ผ่าน");
-          }else if (action === "personalNotice") {
+          } else if (action === "personalNotice") {
             const ret = { message: "OK" };
             console.log("groupsArray = ", GroupsArray);
             GroupsArray.map(async groupId => {
               const ret = await getTaskDetailDueDate(groupId);
-              console.log("ret = ",ret);
+              console.log("ret = ", ret);
             });
-          return res.status(200).send(ret);          
+            return res.status(200).send(ret);
           }
         }
       }
@@ -555,7 +560,7 @@ const getGroupMemberIds = function (userId) {
 //   });
 // };
 
-const getTargetLimitForAdditionalMessages = (bodyResponse) => {
+const getTargetLimitForAdditionalMessages = bodyResponse => {
   return request({
     method: `GET`,
     uri: `https://api.line.me/v2/bot/message/quota`,
@@ -566,7 +571,7 @@ const getTargetLimitForAdditionalMessages = (bodyResponse) => {
   });
 };
 
-const getNumberOfMessagesSentThisMonth = (bodyResponse) => {
+const getNumberOfMessagesSentThisMonth = bodyResponse => {
   return request({
     method: `GET`,
     uri: `https://api.line.me/v2/bot/message/quota/consumption`,
@@ -605,20 +610,20 @@ const getMembers = async function (groupId) {
 
 const getMembersLength = async function (GroupsArray) {
   var MembersCount = 0;
-  console.log("type of MembersCount = ",typeof(MembersCount));
-  
+  console.log("type of MembersCount = ", typeof MembersCount);
+
   const total = GroupsArray.map(async groupId => {
     const getUsers = await getMembers(groupId);
-    console.log("getUsers = ",getUsers);
+    console.log("getUsers = ", getUsers);
     var size = Number(Object.keys(getUsers).length);
-    console.log("size = ",size);
-    console.log("type of size = ",typeof(size));
+    console.log("size = ", size);
+    console.log("type of size = ", typeof size);
     MembersCount = MembersCount + size;
-    console.log("MembersCount ใน map = ",MembersCount);
+    console.log("MembersCount ใน map = ", MembersCount);
     return MembersCount;
-  })
+  });
   const total2 = await Promise.all(total);
-  console.log("MembersCount นอก map = ",total2);
+  console.log("MembersCount นอก map = ", total2);
   return total2;
 };
 
@@ -689,7 +694,7 @@ const createTask = async function (replyToken, groupId, userSaid, bool) {
     var AssigneeString = userSaid.split("#to")[1].trim();
     var assigneeArray = AssigneeString.split(" ");
     for (i = 0; i < assigneeArray.length; i++) {
-      if(assigneeArray[i].includes("@")){
+      if (assigneeArray[i].includes("@")) {
         assigneeName.push(assigneeArray[i].split("@")[1]);
       }
     }
@@ -843,13 +848,13 @@ const getTaskDetailNotDone = async function (groupId) {
 };
 
 const getTaskDetailDueDate = async function (groupId) {
-  console.log("groupID = ",groupId);
+  console.log("groupID = ", groupId);
   // <-- Read data from database part -->
   var UsersArray = [];
   const yesterday = await ytdTimestamp();
   const today = await tdTimestamp();
   const anHourLater = await anHourLaterTimestamp();
-  console.log("anHourLater = ",anHourLater);
+  console.log("anHourLater = ", anHourLater);
   let FindtasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -860,14 +865,14 @@ const getTaskDetailDueDate = async function (groupId) {
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
   //console.log("getTaskDetail = ", getTaskDetail);
   await getTaskDetail.map(task => {
-    if(task.datetime === anHourLater);
+    if (task.datetime === anHourLater);
     console.log("task.datetime === anHourLater");
-      UsersArray.push(task.assignee);
+    UsersArray.push(task.assignee);
   });
-  console.log("UsersArray = ",UsersArray);
-  return UsersArray;   
+  console.log("UsersArray = ", UsersArray);
+  return UsersArray;
   //<-- End read data part -->};
-}
+};
 
 //NEWEST FUNCTION DO NEXT WEEK
 // const getTaskDetailbyDate = async function (groupId,datetime) {
@@ -968,10 +973,9 @@ const anHourLaterTimestamp = function () {
   var anD = new Date(new Date(anHourAgo));
   var anDP = Date.parse(anD);
   //console.log(anD.toUTCString());
-   var anHourAgo2 = new Date(anDP).setMinutes(0);
-   var anHourAgo3 = new Date(anHourAgo2).setSeconds(0);
-    //console.log(anHourAgo2);
+  var anHourAgo2 = new Date(anDP).setMinutes(0);
+  var anHourAgo3 = new Date(anHourAgo2).setSeconds(0);
+  //console.log(anHourAgo2);
   console.log(new Date(anHourAgo3));
   return anHourAgo3;
 };
-
