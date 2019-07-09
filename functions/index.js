@@ -185,10 +185,7 @@ exports.CronEndpoint = functions
               const TasksArray = await getTaskDetailDueDate(groupId);
               console.log("ret = ", TasksArray);
               TasksArray.map(task => {
-                console.log("task.conddition = ", task.condition);
-                console.log("task.userId = ", task.userId);
                 if (task.userId.length === 0) {
-                  console.log("เข้า empty");
                   if (task.condition === "anHour") {
                     return replyToRoom(
                       task.createby,
@@ -206,7 +203,6 @@ exports.CronEndpoint = functions
                   }
                 } else {
                   task.userId.map(userId => {
-                    console.log("ไม่เข้า empty");
                     if (task.condition === "anHour") {
                       return replyToRoom(
                         userId,
@@ -745,7 +741,9 @@ const createTask = async function (replyToken, groupId, userId, userSaid, bool) 
   let assigneeIdArray = [];
   var assigneeName = [];
   var tasktitle = userSaid.split("#to")[0].trim();
+  var onlyone;
   if (bool) {
+    onlyone = false;
     var AssigneeString = userSaid.split("#to")[1].trim();
     var assigneeArray = AssigneeString.split(" ");
     for (i = 0; i < assigneeArray.length; i++) {
@@ -783,7 +781,13 @@ const createTask = async function (replyToken, groupId, userId, userSaid, bool) 
     };
     assigneeIdArray = await getAssigneeIdArray(assigneeName);
   }
+  else{
+    onlyone = true;
+  }
   if (assigneeIdArray.length === assigneeName.length) {
+    if(onlyone === true){
+      assigneeIdArray.push(userId);
+    }
     let tasksDocumentRef = db
       .collection("data")
       .doc(groupId)
