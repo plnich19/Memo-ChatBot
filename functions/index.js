@@ -19,7 +19,79 @@ admin.initializeApp({
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection('data');
 
+<<<<<<< Updated upstream
 exports.Chatbot = functions.region('asia-east2').https.onRequest(async (req, res) => {
+=======
+      if (remain >= MsgUse) {
+        var today = new Date(Date.now());
+        var day = today.getDay();
+        if (day === 0 || day === 6) {
+          console.log("not weekday");
+        } else {
+          if (action === "broadcastTogroup") {
+            GroupsArray.map(groupId => {
+              return replyToRoom(groupId, message);
+            });
+            return res.status(200).send("ผ่าน");
+          } else if (action === "broadcastLiff") {
+            GroupsArray.map(groupId => {
+              return replyLiff(groupId, message);
+            });
+            return res.status(200).send("ผ่าน");
+          } else if (action === "personalNotice") {
+            const ret = { message: "OK" };
+            console.log("groupsArray = ", GroupsArray);
+            GroupsArray.map(async groupId => {
+              const TasksArray = await getTaskDetailDueDate(groupId);
+              console.log("ret = ", TasksArray);
+              TasksArray.map(task => {
+                if (task.userId.length === 0) {
+                  if (task.condition === "anHour") {
+                    return replyToRoom(
+                      task.createby,
+                      `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
+                      task.title
+                      } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
+                    );
+                  } else if (task.condition === "aHalf") {
+                    return replyToRoom(
+                      task.createby,
+                      `คุณมีงาน ${
+                      task.title
+                      } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
+                    );
+                  }
+                } else {
+                  task.userId.map(userId => {
+                    if (task.condition === "anHour") {
+                      return replyToRoom(
+                        userId,
+                        `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
+                        task.title
+                        } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
+                      );
+                    } else if (task.condition === "aHalf") {
+                      return replyToRoom(
+                        userId,
+                        `คุณมีงาน ${
+                        task.title
+                        } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
+                      );
+                    }
+                  });
+                }
+              });
+            });
+            return res.status(200).send("OK");
+          }
+        }
+      }
+    } else {
+      const ret = { message: "action parameter missing" };
+      return res.status(400).send(ret);
+    }
+  });
+>>>>>>> Stashed changes
 
     const reqType = req.body.events[0].type;
     const replyToken = req.body.events[0].replyToken;
@@ -277,6 +349,7 @@ const getMemberProfile = async function(groupId,userSaid,bool){
     }
     return true;
   }
+<<<<<<< Updated upstream
     var splitText = userSaid.split("@");
     console.log("splitText = ",splitText);
     // <-- Read data from database part -->
@@ -296,6 +369,46 @@ const getMemberProfile = async function(groupId,userSaid,bool){
       }
       else{
         writeTask = true;
+=======
+  //<-- End read data part -->
+  return writeTask;
+};
+
+const updateMember = function (groupId, userId) {
+  let FindmembersDocumentRef = db
+    .collection("data")
+    .doc(groupId)
+    .collection("members")
+    .doc(userId);
+  let transaction = db
+    .runTransaction(t => {
+      return t.get(FindmembersDocumentRef).then(doc => {
+        t.update(FindmembersDocumentRef, { role: "Member" });
+        return "UPDATE";
+      });
+    })
+    .then(result => {
+      console.log("Transaction success!");
+      return "OK2";
+    })
+    .catch(err => {
+      console.log("Transaction failure:", err);
+    });
+};
+
+const createTask = async function (replyToken, groupId, userId, userSaid, bool) {
+  let assigneeIdArray = [];
+  var assigneeName = [];
+  var tasktitle = userSaid.split("#to")[0].trim();
+  var onlyone;
+  if (bool) {
+    onlyone = false;
+    var AssigneeString = userSaid.split("#to")[1].trim();
+    var assigneeArray = AssigneeString.split(" ");
+    for (i = 0; i < assigneeArray.length; i++) {
+      if (assigneeArray[i].includes("@")) {
+        assigneeName.push(assigneeArray[i].split("@")[1]);
+>>>>>>> Stashed changes
       }
     }
     //<-- End read data part -->
@@ -313,6 +426,7 @@ const updateMember = async function(groupId,userId){
           t.update(FindmembersDocumentRef, {role: "Member"});
           return "UPDATE";
         });
+<<<<<<< Updated upstream
     }).then(result => {
       console.log('Transaction success!');
       return "OK2";
@@ -338,6 +452,40 @@ const createTask = async function(groupId,userSaid){
         assignee: "some ID"
     })
     .then(function() {
+=======
+      return assigneeIdArray;
+    };
+    assigneeIdArray = await getAssigneeIdArray(assigneeName);
+  }
+  else{
+    onlyone = true;
+  }
+  if (assigneeIdArray.length === assigneeName.length) {
+    if(onlyone === true){
+      assigneeIdArray.push(userId);
+    }
+    let tasksDocumentRef = db
+      .collection("data")
+      .doc(groupId)
+      .collection("tasks");
+    // <---Write data part-->
+    tasksDocumentRef
+      .add({
+        title: tasktitle,
+        status: false,
+        assignee: assigneeIdArray,
+        datetime: "",
+        createtime: Date.now(),
+        createby: userId
+      })
+      .then(async result => {
+        var date = new Date(Date.now());
+        var dateISOString = date.toISOString();
+        console.log(dateISOString);
+        var splitText = dateISOString.split("T");
+        var dateLimit = `${splitText[0]}T00:00`;
+        console.log(dateLimit);
+>>>>>>> Stashed changes
         console.log("Task successfully written!");
         return "OK";
     })
