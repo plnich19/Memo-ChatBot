@@ -185,46 +185,46 @@ exports.CronEndpoint = functions
               const TasksArray = await getTaskDetailDueDate(groupId);
               console.log("ret = ", TasksArray);
               TasksArray.map(task => {
-                console.log("task.conddition = ",task.condition);
-                console.log("task.userId = ",task.userId);
-                if(task.userId.length === 0){
+                console.log("task.conddition = ", task.condition);
+                console.log("task.userId = ", task.userId);
+                if (task.userId.length === 0) {
                   console.log("เข้า empty");
-                    if(task.condition === "anHour"){
-                    return replyToRoom(task.createby,`น้องโน๊ตมาเตือนว่าคุณมีงาน ${
-                      task.title
-                      } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`);
-                    } else if(task.condition === "aHalf"){
-                      return replyToRoom(
-                        task.createby,
-                        `คุณมีงาน ${
-                        task.title
-                        } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
-                      );
-                    }
-                }
-                else{
-                  task.userId.map(userId => {
-                    console.log("ไม่เข้า empty");
-                  if(task.condition === "anHour"){
+                  if (task.condition === "anHour") {
                     return replyToRoom(
-                      userId,
+                      task.createby,
                       `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
                       task.title
                       } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
                     );
-                  }
-                  else if(task.condition === "aHalf"){
+                  } else if (task.condition === "aHalf") {
                     return replyToRoom(
-                      userId,
+                      task.createby,
                       `คุณมีงาน ${
                       task.title
                       } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
                     );
                   }
-                });
-              }
+                } else {
+                  task.userId.map(userId => {
+                    console.log("ไม่เข้า empty");
+                    if (task.condition === "anHour") {
+                      return replyToRoom(
+                        userId,
+                        `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
+                        task.title
+                        } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
+                      );
+                    } else if (task.condition === "aHalf") {
+                      return replyToRoom(
+                        userId,
+                        `คุณมีงาน ${
+                        task.title
+                        } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
+                      );
+                    }
+                  });
+                }
               });
-            
             });
             return res.status(200).send("OK");
           }
@@ -264,7 +264,7 @@ exports.Chatbot = functions
             console.log("userSaid = ", userSaid);
             const groupId = req.body.events[0].source.groupId;
             const userId = req.body.events[0].source.userId;
-            createTask(replyToken, groupId, userId , userSaid, true);
+            createTask(replyToken, groupId, userId, userSaid, true);
           } else {
             const userSaid = reqMessage.split("#create")[1];
             const groupId = req.body.events[0].source.groupId;
@@ -710,7 +710,7 @@ const getMemberProfile = async function (groupId, name, bool) {
     // replyConfirmButton(groupId);
   } else {
     if (bool) {
-      replyCorouselToRoom(groupId,getMemberProfile);
+      replyCorouselToRoom(groupId, getMemberProfile);
     } else {
       writeTask = true;
     }
@@ -741,7 +741,7 @@ const updateMember = function (groupId, userId) {
     });
 };
 
-const createTask = async function (replyToken, groupId,userId, userSaid, bool) {
+const createTask = async function (replyToken, groupId, userId, userSaid, bool) {
   let assigneeIdArray = [];
   var assigneeName = [];
   var tasktitle = userSaid.split("#to")[0].trim();
@@ -912,7 +912,7 @@ const getTaskDetailDueDate = async function (groupId) {
   const anHourLater = await anHourLaterTimestamp();
   const aHalfLater = await ThirtyMinsLaterTimestamp();
   console.log("anHourLater = ", anHourLater);
-  console.log("aHalfLater = ",aHalfLater);
+  console.log("aHalfLater = ", aHalfLater);
   let FindtasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -930,7 +930,7 @@ const getTaskDetailDueDate = async function (groupId) {
         title: task.title,
         createby: task.createby
       });
-    } else if (task.datetime === aHalfLater){
+    } else if (task.datetime === aHalfLater) {
       TasksArray.push({
         condition: "aHalf",
         userId: task.assignee,
