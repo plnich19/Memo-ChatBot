@@ -780,12 +780,11 @@ const createTask = async function (replyToken, groupId, userId, userSaid, bool) 
       return assigneeIdArray;
     };
     assigneeIdArray = await getAssigneeIdArray(assigneeName);
-  }
-  else{
+  } else {
     onlyone = true;
   }
   if (assigneeIdArray.length === assigneeName.length) {
-    if(onlyone === true){
+    if (onlyone === true) {
       assigneeIdArray.push(userId);
     }
     let tasksDocumentRef = db
