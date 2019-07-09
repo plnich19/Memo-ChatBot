@@ -186,6 +186,7 @@ exports.CronEndpoint = functions
               console.log("ret = ", TasksArray);
               TasksArray.map(task => {
                 task.userId.map(userId => {
+                  console.log("task.userId = ",task.userId);
                   if(isEmpty(task.userId)){
                     task.createby.map(createuserId => {
                       if(task.condition === "anHour"){
@@ -223,7 +224,7 @@ exports.CronEndpoint = functions
                 });
               });
             });
-            return res.status(200).send(TasksArray);
+            return res.status(200).send("OK");
           }
         }
       }
@@ -579,7 +580,8 @@ const getTasksData = function (db) {
         status: data.status,
         assignee: data.assignee,
         datetime: data.datetime,
-        createtime: data.createtime
+        createtime: data.createtime,
+        createby: data.createby
       });
     });
     return TasksArray;
@@ -908,6 +910,7 @@ const getTaskDetailDueDate = async function (groupId) {
   const anHourLater = await anHourLaterTimestamp();
   const aHalfLater = await ThirtyMinsLaterTimestamp();
   console.log("anHourLater = ", anHourLater);
+  console.log("aHalfLater = ",aHalfLater);
   let FindtasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -922,13 +925,15 @@ const getTaskDetailDueDate = async function (groupId) {
       TasksArray.push({
         condition: "anHour",
         userId: task.assignee,
-        title: task.title
+        title: task.title,
+        createby: task.createby
       });
     } else if (task.datetime === aHalfLater){
       TasksArray.push({
         condition: "aHalf",
         userId: task.assignee,
-        title: task.title
+        title: task.title,
+        createby: task.createby
       });
     }
   });
@@ -1048,8 +1053,8 @@ const anHourLaterTimestamp = function () {
   var anD = new Date(new Date(anHourLater));
   var anDP = Date.parse(anD);
   //console.log(anD.toUTCString());
-  var anHourLater2 = new Date(anDP).setMinutes(0);
-  var anHourLater3 = new Date(anHourLater2).setSeconds(0);
+  //var anHourLater2 = new Date(anDP).setMinutes(0);
+  var anHourLater3 = new Date(anDP).setSeconds(0);
   //console.log(anHourLater2);
   console.log(new Date(anHourLater3));
   return anHourLater3;
