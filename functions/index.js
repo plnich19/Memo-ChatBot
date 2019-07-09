@@ -260,12 +260,12 @@ exports.Chatbot = functions
             const userSaid = reqMessage.split("#create")[1];
             console.log("userSaid = ", userSaid);
             const groupId = req.body.events[0].source.groupId;
-            const userId = req.body.event[0].source.userId;
+            const userId = req.body.events[0].source.userId;
             createTask(replyToken, groupId, userId , userSaid, true);
           } else {
             const userSaid = reqMessage.split("#create")[1];
             const groupId = req.body.events[0].source.groupId;
-            const userId = req.body.event[0].source.userId;
+            const userId = req.body.events[0].source.userId;
             createTask(replyToken, groupId, userId, userSaid, false);
           }
         } else if (reqMessage.toLowerCase() === "updatetask") {
