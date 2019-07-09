@@ -186,7 +186,7 @@ exports.CronEndpoint = functions
               console.log("ret = ", TasksArray);
               TasksArray.map(task => {
                 task.userId.map(userId => {
-                  if(isEmpty(userId)){
+                  if(isEmpty(task.userId)){
                     task.createby.map(createuserId => {
                       if(task.condition === "anHour"){
                       return replyToRoom(createuserId,`น้องโน๊ตมาเตือนว่าคุณมีงาน ${
@@ -932,7 +932,7 @@ const getTaskDetailDueDate = async function (groupId) {
       });
     }
   });
-  console.log("UsersArray = ", TasksArray);
+  console.log("TasksArray = ", TasksArray);
   return TasksArray;
   //<-- End read data part -->};
 };
