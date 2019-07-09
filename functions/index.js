@@ -185,25 +185,26 @@ exports.CronEndpoint = functions
               const TasksArray = await getTaskDetailDueDate(groupId);
               console.log("ret = ", TasksArray);
               TasksArray.map(task => {
-                task.userId.map(userId => {
-                  console.log("task.userId = ",task.userId);
-                  if(isEmpty(task.userId)){
-                    task.createby.map(createuserId => {
-                      if(task.condition === "anHour"){
-                      return replyToRoom(createuserId,`น้องโน๊ตมาเตือนว่าคุณมีงาน ${
+                console.log("task.conddition = ",task.condition);
+                console.log("task.userId = ",task.userId);
+                if(task.userId.length === 0){
+                  console.log("เข้า empty");
+                    if(task.condition === "anHour"){
+                    return replyToRoom(task.createby,`น้องโน๊ตมาเตือนว่าคุณมีงาน ${
+                      task.title
+                      } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`);
+                    } else if(task.condition === "aHalf"){
+                      return replyToRoom(
+                        task.createby,
+                        `คุณมีงาน ${
                         task.title
-                        } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`);
-                      } else if(task.condition === "aHalf"){
-                        return replyToRoom(
-                          createuserId,
-                          `คุณมีงาน ${
-                          task.title
-                          } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
-                        );
-                      }
-                    });
-                  }
-                  else{
+                        } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
+                      );
+                    }
+                }
+                else{
+                  task.userId.map(userId => {
+                    console.log("ไม่เข้า empty");
                   if(task.condition === "anHour"){
                     return replyToRoom(
                       userId,
@@ -220,9 +221,10 @@ exports.CronEndpoint = functions
                       } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
                     );
                   }
-                }
                 });
+              }
               });
+            
             });
             return res.status(200).send("OK");
           }
