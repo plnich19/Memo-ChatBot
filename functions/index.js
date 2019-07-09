@@ -135,6 +135,12 @@ exports.CronEndpoint = functions
   .https.onRequest(async (req, res) => {
     const action = req.query.action;
     const message = req.query.message;
+    const isEmpty = function (obj) {
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key)) return false;
+      }
+      return true;
+    };
     if (action !== undefined) {
       let getTargetLimit = await getTargetLimitForAdditionalMessages()
         .then(res => {
@@ -180,12 +186,40 @@ exports.CronEndpoint = functions
               console.log("ret = ", TasksArray);
               TasksArray.map(task => {
                 task.userId.map(userId => {
-                  return replyToRoom(
-                    userId,
-                    `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
-                    task.title
-                    } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
-                  );
+                  if(isEmpty(userId)){
+                    task.createby.map(createuserId => {
+                      if(task.condition === "anHour"){
+                      return replyToRoom(createuserId,`น้องโน๊ตมาเตือนว่าคุณมีงาน ${
+                        task.title
+                        } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`);
+                      } else if(task.condition === "aHalf"){
+                        return replyToRoom(
+                          createuserId,
+                          `คุณมีงาน ${
+                          task.title
+                          } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
+                        );
+                      }
+                    });
+                  }
+                  else{
+                  if(task.condition === "anHour"){
+                    return replyToRoom(
+                      userId,
+                      `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
+                      task.title
+                      } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
+                    );
+                  }
+                  else if(task.condition === "aHalf"){
+                    return replyToRoom(
+                      userId,
+                      `คุณมีงาน ${
+                      task.title
+                      } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
+                    );
+                  }
+                }
                 });
               });
             });
@@ -226,11 +260,13 @@ exports.Chatbot = functions
             const userSaid = reqMessage.split("#create")[1];
             console.log("userSaid = ", userSaid);
             const groupId = req.body.events[0].source.groupId;
-            createTask(replyToken, groupId, userSaid, true);
+            const userId = req.body.event[0].source.userId;
+            createTask(replyToken, groupId, userId , userSaid, true);
           } else {
             const userSaid = reqMessage.split("#create")[1];
             const groupId = req.body.events[0].source.groupId;
-            createTask(replyToken, groupId, userSaid, false);
+            const userId = req.body.event[0].source.userId;
+            createTask(replyToken, groupId, userId, userSaid, false);
           }
         } else if (reqMessage.toLowerCase() === "updatetask") {
           const groupId = req.body.events[0].source.groupId;
@@ -701,7 +737,7 @@ const updateMember = function (groupId, userId) {
     });
 };
 
-const createTask = async function (replyToken, groupId, userSaid, bool) {
+const createTask = async function (replyToken, groupId,userId, userSaid, bool) {
   let assigneeIdArray = [];
   var assigneeName = [];
   var tasktitle = userSaid.split("#to")[0].trim();
@@ -755,7 +791,8 @@ const createTask = async function (replyToken, groupId, userSaid, bool) {
         status: false,
         assignee: assigneeIdArray,
         datetime: "",
-        createtime: Date.now()
+        createtime: Date.now(),
+        createby: userId
       })
       .then(async result => {
         var date = new Date(Date.now());
@@ -869,6 +906,7 @@ const getTaskDetailDueDate = async function (groupId) {
   const yesterday = await ytdTimestamp();
   const today = await tdTimestamp();
   const anHourLater = await anHourLaterTimestamp();
+  const aHalfLater = await ThirtyMinsLaterTimestamp();
   console.log("anHourLater = ", anHourLater);
   let FindtasksDocumentRef = db
     .collection("data")
@@ -881,8 +919,14 @@ const getTaskDetailDueDate = async function (groupId) {
   //console.log("getTaskDetail = ", getTaskDetail);
   await getTaskDetail.map(task => {
     if (task.datetime === anHourLater) {
-      console.log(task.datetime, "===", anHourLater);
       TasksArray.push({
+        condition: "anHour",
+        userId: task.assignee,
+        title: task.title
+      });
+    } else if (task.datetime === aHalfLater){
+      TasksArray.push({
+        condition: "aHalf",
         userId: task.assignee,
         title: task.title
       });
@@ -1000,13 +1044,26 @@ const tdTimestampbyDate = function (datetime) {
 const anHourLaterTimestamp = function () {
   const HOUR = 1000 * 60 * 60;
   //console.log(Date.now());
-  var anHourAgo = Date.now() + HOUR;
-  var anD = new Date(new Date(anHourAgo));
+  var anHourLater = Date.now() + HOUR;
+  var anD = new Date(new Date(anHourLater));
   var anDP = Date.parse(anD);
   //console.log(anD.toUTCString());
-  var anHourAgo2 = new Date(anDP).setMinutes(0);
-  var anHourAgo3 = new Date(anHourAgo2).setSeconds(0);
+  var anHourLater2 = new Date(anDP).setMinutes(0);
+  var anHourLater3 = new Date(anHourLater2).setSeconds(0);
+  //console.log(anHourLater2);
+  console.log(new Date(anHourLater3));
+  return anHourLater3;
+};
+
+const ThirtyMinsLaterTimestamp = function () {
+  const HALF = 1000 * 60 * 30;
+  //console.log(Date.now());
+  var aHalfLater = Date.now() + HALF;
+  var anD = new Date(new Date(aHalfLater));
+  var anDP = Date.parse(anD);
+  //console.log(anD.toUTCString());
+  var aHalfLater3 = new Date(anDP).setSeconds(0);
   //console.log(anHourAgo2);
-  console.log(new Date(anHourAgo3));
-  return anHourAgo3;
+  console.log(new Date(aHalfLater3));
+  return aHalfLater3;
 };
