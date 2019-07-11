@@ -752,9 +752,6 @@ const getMemberProfilebyId = async function (groupId, userId) {
       .get()
       .then(doc => {
         docdata = doc.data();
-        console.log("Debugging V.1.2");
-        console.log("doc.data = ", docdata);
-        console.log("displayName = ", docdata.displayName);
         return docdata.displayName;
       })
       .catch(err => {
