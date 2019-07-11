@@ -3,7 +3,7 @@ const serviceAccount = require("./serviceAccountKey.json");
 const functions = require("firebase-functions");
 const line = require("@line/bot-sdk");
 const request = require("request-promise");
-const moment = require('moment');
+const moment = require("moment");
 
 const config = {
   channelAccessToken:
@@ -127,17 +127,18 @@ exports.DataAPI = functions
         const taskId = req.query.taskId;
         const groupId = req.query.groupId;
         let FindtasksDocumentRef = db
-        .collection("data")
-        .doc(groupId)
-        .collection("tasks")
-        .doc(taskId);
+          .collection("data")
+          .doc(groupId)
+          .collection("tasks")
+          .doc(taskId);
         FindtasksDocumentRef.get()
-        .then((doc) => {
-          console.log("doc.data = ", doc.data());
-          return "find successfully";
-        }).catch((err) => {
-          console.log("พัง",err);
-        });
+          .then(doc => {
+            console.log("doc.data = ", doc.data());
+            return "find successfully";
+          })
+          .catch(err => {
+            console.log("พัง", err);
+          });
       }
     } else {
       const ret = { message: "พัง" };
@@ -387,36 +388,36 @@ exports.Chatbot = functions
         const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split("=");
         let FindtasksDocumentRef = db
-        .collection("data")
-        .doc(groupId)
-        .collection("tasks")
-        .doc(splitText[1])
+          .collection("data")
+          .doc(groupId)
+          .collection("tasks")
+          .doc(splitText[1]);
         FindtasksDocumentRef.get()
-        .then(async (doc) => {
-          let docdata = doc.data();
-          let assigneearray = [];
-          const assigneeArray = async function (assignee) {
-            const arraypromise = await assignee.map(async userId => {
-              const displayName = await getMemberProfilebyId(groupId,userId);
-              assigneearray.push(displayName);
-              return assigneearray;
-            });
-            const assigneeArray = await Promise.all(arraypromise);
-            return assigneeArray;
-          }
-          const assigneeArrayRes = await assigneeArray(docdata.assignee);
-          const replyMsg = 
-          `Title : ${docdata.title} 
+          .then(async doc => {
+            let docdata = doc.data();
+            let assigneearray = [];
+            const assigneeArray = async function (assignee) {
+              const arraypromise = await assignee.map(async userId => {
+                const displayName = await getMemberProfilebyId(groupId, userId);
+                assigneearray.push(displayName);
+                return assigneearray;
+              });
+              const assigneeArray = await Promise.all(arraypromise);
+              return assigneeArray;
+            };
+            const assigneeArrayRes = await assigneeArray(docdata.assignee);
+            const replyMsg = `Title : ${docdata.title} 
 Due Date : No Duedate 
 Assignee : ${assigneeArrayRes[0].join()}
 
 ถูกสร้างขึ้นเรียบร้อยแล้ว! 
 พิมพ์ #display เพื่อดูลิสต์เต็มๆ ได้เลยครับ`;
-          reply(replyToken, replyMsg);
-          return "reply successfully";
-      }).catch((err) => {
-            console.log("พัง",err);
-      });
+            reply(replyToken, replyMsg);
+            return "reply successfully";
+          })
+          .catch(err => {
+            console.log("พัง", err);
+          });
       }
     }
   });
@@ -762,27 +763,28 @@ const getMemberProfile = async function (groupId, name, bool) {
 
 const getMemberProfilebyId = async function (groupId, userId) {
   //<-- Read Document Part-->
-  const getDisplayName = function(db) {
+  const getDisplayName = function (db) {
     return db
-     .get()
-     .then( doc => {
-      docdata = doc.data();
-      console.log('Debugging V.1.2');
-      console.log("doc.data = ",docdata);
-      console.log("displayName = ",docdata.displayName);
-      return docdata.displayName;
-   }).catch( err => {
-     console.log("Error getting document:", err);
-   });
- };
- //<--End Read Document Part-->
+      .get()
+      .then(doc => {
+        docdata = doc.data();
+        console.log("Debugging V.1.2");
+        console.log("doc.data = ", docdata);
+        console.log("displayName = ", docdata.displayName);
+        return docdata.displayName;
+      })
+      .catch(err => {
+        console.log("Error getting document:", err);
+      });
+  };
+  //<--End Read Document Part-->
   let FindmembersDocumentRef = db
     .collection("data")
     .doc(groupId)
     .collection("members")
     .doc(userId);
   const displayName = await getDisplayName(FindmembersDocumentRef);
-  console.log("displayName นอก = ",displayName);
+  console.log("displayName นอก = ", displayName);
   return displayName;
 };
 
@@ -937,28 +939,29 @@ const updateTime = function (replyToken, groupId, taskId, datetime) {
       });
     })
     .then(result => {
-      const FindtasksDocumentRefRes = FindtasksDocumentRef.get()
+      const FindtasksDocumentRefRes = FindtasksDocumentRef.get();
       return FindtasksDocumentRefRes;
     })
-    .then(async (doc) => {
+    .then(async doc => {
       let docdata = doc.data();
       console.log("doc.data = ", doc.data());
-      var date = moment(docdata.datetime + 7 * 1000 * 60 *60).format('MMMM Do YYYY, h:mm a');
+      var date = moment(docdata.datetime + 7 * 1000 * 60 * 60).format(
+        "MMMM Do YYYY, h:mm a"
+      );
       let assigneearray = [];
       const assigneeArray = async function (assignee) {
         const arraypromise = await assignee.map(async userId => {
-          const displayName = await getMemberProfilebyId(groupId,userId);
+          const displayName = await getMemberProfilebyId(groupId, userId);
           assigneearray.push(displayName);
           return assigneearray;
         });
         const assigneeArray = await Promise.all(arraypromise);
         return assigneeArray;
-      }
+      };
       const assigneeArrayRes = await assigneeArray(docdata.assignee);
-      console.log("assigneeArrayRes",assigneeArrayRes);
+      console.log("assigneeArrayRes", assigneeArrayRes);
       console.log("assigneeArrayRes.join() = ", assigneeArrayRes[0].join());
-      const replyMsg = 
-      `Title : ${docdata.title} 
+      const replyMsg = `Title : ${docdata.title} 
 Due Date : ${date} 
 Assignee : ${assigneeArrayRes[0].join()}
 
@@ -967,10 +970,11 @@ Assignee : ${assigneeArrayRes[0].join()}
       reply(replyToken, replyMsg);
       console.log("Transaction success!");
       return "find successfully";
-      }).catch((err) => {
-        console.log("พัง",err);
-      });
-  };
+    })
+    .catch(err => {
+      console.log("พัง", err);
+    });
+};
 
 const getTasks = async function (groupId) {
   // <-- Read data from database part -->
