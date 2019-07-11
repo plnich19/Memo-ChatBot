@@ -3,6 +3,7 @@ const serviceAccount = require("./serviceAccountKey.json");
 const functions = require("firebase-functions");
 const line = require("@line/bot-sdk");
 const request = require("request-promise");
+const moment = require('moment');
 
 const config = {
   channelAccessToken:
@@ -122,6 +123,21 @@ exports.DataAPI = functions
           const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
+      } else if (action === "test") {
+        const taskId = req.query.taskId;
+        const groupId = req.query.groupId;
+        let FindtasksDocumentRef = db
+        .collection("data")
+        .doc(groupId)
+        .collection("tasks")
+        .doc(taskId);
+        FindtasksDocumentRef.get()
+        .then((doc) => {
+          console.log("doc.data = ", doc.data());
+          return "find successfully";
+        }).catch((err) => {
+          console.log("พัง",err);
+        });
       }
     } else {
       const ret = { message: "พัง" };
@@ -367,11 +383,40 @@ exports.Chatbot = functions
         const splitText = postbackData.split("=");
         const datetime = req.body.events[0].postback.params.datetime;
         updateTime(replyToken, groupId, splitText[1], datetime);
-      } else if (postbackData.includes("cancle")) {
-        reply(
-          replyToken,
-          "task ถูกสร้างขึ้นเรียบร้อยแล้ว พิมพ์ #display เพื่อดูลิสต์ได้เลยค่ะ"
-        );
+      } else if (postbackData.includes("cancel")) {
+        const groupId = req.body.events[0].source.groupId;
+        const splitText = postbackData.split("=");
+        let FindtasksDocumentRef = db
+        .collection("data")
+        .doc(groupId)
+        .collection("tasks")
+        .doc(splitText[1])
+        FindtasksDocumentRef.get()
+        .then(async (doc) => {
+          let docdata = doc.data();
+          let assigneearray = [];
+          const assigneeArray = async function (assignee) {
+            const arraypromise = await assignee.map(async userId => {
+              const displayName = await getMemberProfilebyId(groupId,userId);
+              assigneearray.push(displayName);
+              return assigneearray;
+            });
+            const assigneeArray = await Promise.all(arraypromise);
+            return assigneeArray;
+          }
+          const assigneeArrayRes = await assigneeArray(docdata.assignee);
+          const replyMsg = 
+          `Title : ${docdata.title} 
+Due Date : No Duedate 
+Assignee : ${assigneeArrayRes[0].join()}
+
+ถูกสร้างขึ้นเรียบร้อยแล้ว! 
+พิมพ์ #display เพื่อดูลิสต์เต็มๆ ได้เลยครับ`;
+          reply(replyToken, replyMsg);
+          return "reply successfully";
+      }).catch((err) => {
+            console.log("พัง",err);
+      });
       }
     }
   });
@@ -479,8 +524,8 @@ const replyDatePicker = (replyToken, groupId, taskId, dateLimit) => {
         },
         {
           type: "postback",
-          label: "Cancle",
-          data: "cancle"
+          label: "Cancel",
+          data: `cancel=${taskId}`
         }
       ]
     }
@@ -715,6 +760,32 @@ const getMemberProfile = async function (groupId, name, bool) {
   return writeTask;
 };
 
+const getMemberProfilebyId = async function (groupId, userId) {
+  //<-- Read Document Part-->
+  const getDisplayName = function(db) {
+    return db
+     .get()
+     .then( doc => {
+      docdata = doc.data();
+      console.log('Debugging V.1.2');
+      console.log("doc.data = ",docdata);
+      console.log("displayName = ",docdata.displayName);
+      return docdata.displayName;
+   }).catch( err => {
+     console.log("Error getting document:", err);
+   });
+ };
+ //<--End Read Document Part-->
+  let FindmembersDocumentRef = db
+    .collection("data")
+    .doc(groupId)
+    .collection("members")
+    .doc(userId);
+  const displayName = await getDisplayName(FindmembersDocumentRef);
+  console.log("displayName นอก = ",displayName);
+  return displayName;
+};
+
 const updateMember = function (groupId, userId) {
   let FindmembersDocumentRef = db
     .collection("data")
@@ -862,20 +933,44 @@ const updateTime = function (replyToken, groupId, taskId, datetime) {
     .runTransaction(t => {
       return t.get(FindtasksDocumentRef).then(doc => {
         t.update(FindtasksDocumentRef, { datetime: datetimeUpdate });
-        return "UPDATE";
+        return FindtasksDocumentRef;
       });
     })
     .then(result => {
-      const replyMsg = `อัพเดทเวลาเรียบร้อยแล้ว! 
-    พิมพ์ #display เพื่อดูลิสต์`;
+      const FindtasksDocumentRefRes = FindtasksDocumentRef.get()
+      return FindtasksDocumentRefRes;
+    })
+    .then(async (doc) => {
+      let docdata = doc.data();
+      console.log("doc.data = ", doc.data());
+      var date = moment(docdata.datetime + 7 * 1000 * 60 *60).format('MMMM Do YYYY, h:mm a');
+      let assigneearray = [];
+      const assigneeArray = async function (assignee) {
+        const arraypromise = await assignee.map(async userId => {
+          const displayName = await getMemberProfilebyId(groupId,userId);
+          assigneearray.push(displayName);
+          return assigneearray;
+        });
+        const assigneeArray = await Promise.all(arraypromise);
+        return assigneeArray;
+      }
+      const assigneeArrayRes = await assigneeArray(docdata.assignee);
+      console.log("assigneeArrayRes",assigneeArrayRes);
+      console.log("assigneeArrayRes.join() = ", assigneeArrayRes[0].join());
+      const replyMsg = 
+      `Title : ${docdata.title} 
+Due Date : ${date} 
+Assignee : ${assigneeArrayRes[0].join()}
+
+ถูกสร้างเรียบร้อยแล้ว! 
+พิมพ์ #display เพื่อดูลิสต์เต็มๆ ได้เลยครับ`;
       reply(replyToken, replyMsg);
       console.log("Transaction success!");
-      return "OK2";
-    })
-    .catch(err => {
-      console.log("Transaction failure:", err);
-    });
-};
+      return "find successfully";
+      }).catch((err) => {
+        console.log("พัง",err);
+      });
+  };
 
 const getTasks = async function (groupId) {
   // <-- Read data from database part -->
