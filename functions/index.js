@@ -49,7 +49,7 @@ exports.DataAPI = functions
           const rtnData = await getMembers(groupId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "พังจริง" };
+          const ret = { message: "Error getting members" };
           return res.status(400).send(ret);
         }
       } else if (action === "getTasks") {
@@ -58,7 +58,7 @@ exports.DataAPI = functions
           const rtnData = await getTasks(groupId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "พังจริง" };
+          const ret = { message: "Error getting tasks" };
           return res.status(400).send(ret);
         }
       } else if (action === "updateTask") {
@@ -72,11 +72,11 @@ exports.DataAPI = functions
           if (rtnData) {
             return res.status(200).send(JSON.stringify({ result: rtnData }));
           } else {
-            const ret = { message: "updateTask failed" };
+            const ret = { message: "Fail to update task" };
             return res.status(400).send(ret);
           }
         } else {
-          const ret = { message: "updateTask missing parameters" };
+          const ret = { message: "Couldn't update--missing parameters" };
           return res.status(400).send(ret);
         }
       } else if (action === "deleteTask") {
@@ -87,7 +87,7 @@ exports.DataAPI = functions
           const rtnData = await deleteTask(groupId, taskId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "พังจริง" };
+          const ret = { message: "Error deleting task" };
           return res.status(400).send(ret);
         }
       } else if (action === "getYourTask") {
@@ -98,7 +98,7 @@ exports.DataAPI = functions
           const rtnData = await getYourTask(groupId, userId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "พังจริง" };
+          const ret = { message: "Error getting this userId's tasks" };
           return res.status(400).send(ret);
         }
       } else if (action === "getTaskDetailNotDone") {
@@ -108,7 +108,7 @@ exports.DataAPI = functions
           const rtnData = await getTaskDetailNotDone(groupId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "พังจริง" };
+          const ret = { message: "Error getting not done task" };
           return res.status(400).send(ret);
         }
       } else if (action === "getTaskDetailbyDate") {
@@ -120,12 +120,12 @@ exports.DataAPI = functions
           const rtnData = await getTaskDetailbyDate(groupId, datetime);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "พังจริง" };
+          const ret = { message: "Error getting tasks by date" };
           return res.status(400).send(ret);
         }
       }
     } else {
-      const ret = { message: "พัง" };
+      const ret = { message: "action is not defined" };
       return res.status(400).send(ret);
     }
   });
@@ -180,7 +180,7 @@ exports.CronEndpoint = functions
             });
             return res.status(200).send("ผ่าน");
           } else if (action === "personalNotice") {
-            const ret = { message: "OK" };
+            const ret = { message: "Personal Notice Successfully" };
             console.log("groupsArray = ", GroupsArray);
             GroupsArray.map(async groupId => {
               const TasksArray = await getTaskDetailDueDate(groupId);
@@ -223,7 +223,7 @@ exports.CronEndpoint = functions
                 }
               });
             });
-            return res.status(200).send("OK");
+            return res.status(200).send(ret);
           }
         }
       }
@@ -400,7 +400,7 @@ Assignee : ${assigneeArrayRes[0].join()}
             return "reply successfully";
           })
           .catch(err => {
-            console.log("พัง", err);
+            console.log("Error cancel request", err);
           });
       }
     }
