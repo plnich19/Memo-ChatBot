@@ -1092,68 +1092,44 @@ const setAdmin = async function (groupId, MakeAdminSplitText) {
 
 const ytdTimestamp = function () {
   var ytd = new Date();
-  // var ytd = today.setDate(today.getDate() - 1);
-  // var ytdDate = new Date(ytd);
-  //console.log(ytd.toUTCString());
   var ytdTimestamp = ytd.setUTCHours(0, 0, 0, 0);
-  //console.log(new Date(ytdTimestamp).toUTCString());
-  //console.log(ytdTimestamp);
   return ytdTimestamp;
 };
 
 const tdTimestamp = function () {
   var td = new Date();
-  var today = td.setDate(td.getDate() + 1);
-  //var tdDate = new Date(today);
-  //console.log(tdDate.toUTCString());
   var tdTimestamp = td.setUTCHours(0, 0, 0, 0);
-  //console.log(new Date(tdTimestamp).toUTCString());
-  //console.log(tdTimestamp);
   return tdTimestamp;
 };
 
 const ytdTimestampbyDate = function (datetime) {
   var date = new Date(datetime);
-  console.log(date);
   var ytdTimestampbyDate = date.setHours(0, 0, 0, 0);
-  console.log(ytdTimestampbyDate);
   return ytdTimestampbyDate;
 };
 
 const tdTimestampbyDate = function (datetime) {
   var td = new Date(datetime);
-  var today = td.setDate(td.getDate() + 1);
-  //var tdDate = new Date(today);
-  //console.log(tdDate.toUTCString());
   var tdTimestampbyDate = td.setUTCHours(0, 0, 0, 0);
-  //console.log(new Date(tdTimestamp).toUTCString());
-  //console.log(tdTimestamp);
   return tdTimestampbyDate;
 };
 
 const anHourLaterTimestamp = function () {
   const HOUR = 1000 * 60 * 60;
-  //console.log(Date.now());
   var anHourLater = Date.now() + HOUR;
-  var anD = new Date(new Date(anHourLater));
-  var anDP = Date.parse(anD);
-  //console.log(anD.toUTCString());
-  //var anHourLater2 = new Date(anDP).setMinutes(0);
-  var anHourLater3 = new Date(anDP).setSeconds(0);
-  //console.log(anHourLater2);
-  console.log(new Date(anHourLater3));
-  return anHourLater3;
+  var anHourLaterDate = new Date(anHourLater);
+  var anHourLaterParse = Date.parse(anHourLaterDate);
+  var anHourLaterTimestamp = new Date(anHourLaterParse).setSeconds(0);
+  console.log(new Date(anHourLaterTimestamp));
+  return anHourLaterTimestamp;
 };
 
 const ThirtyMinsLaterTimestamp = function () {
   const HALF = 1000 * 60 * 30;
-  //console.log(Date.now());
   var aHalfLater = Date.now() + HALF;
-  var anD = new Date(new Date(aHalfLater));
-  var anDP = Date.parse(anD);
-  //console.log(anD.toUTCString());
-  var aHalfLater3 = new Date(anDP).setSeconds(0);
-  //console.log(anHourAgo2);
-  console.log(new Date(aHalfLater3));
-  return aHalfLater3;
+  var aHalfLaterDate = new Date(new Date(aHalfLater));
+  var aHalfLaterParse = Date.parse(aHalfLaterDate);
+  var aHalfLaterTimestamp = new Date(aHalfLaterParse).setSeconds(0);
+  console.log(new Date(aHalfLaterTimestamp));
+  return aHalfLaterTimestamp;
 };
