@@ -123,22 +123,6 @@ exports.DataAPI = functions
           const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
-      } else if (action === "test") {
-        const taskId = req.query.taskId;
-        const groupId = req.query.groupId;
-        let FindtasksDocumentRef = db
-          .collection("data")
-          .doc(groupId)
-          .collection("tasks")
-          .doc(taskId);
-        FindtasksDocumentRef.get()
-          .then(doc => {
-            console.log("doc.data = ", doc.data());
-            return "find successfully";
-          })
-          .catch(err => {
-            console.log("พัง", err);
-          });
       }
     } else {
       const ret = { message: "พัง" };
