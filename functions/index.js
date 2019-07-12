@@ -29,6 +29,9 @@ var dataOneDocumentRef = db.collection("data");
 
 const getTasks = require("./utils/getTasks")(db);
 const getTasksData = require("./utils/getTasksData");
+const reply = require("./utils/reply")(client);
+const replyToRoom = require("./utils/replyToRoom")(client);
+const replyCorouselToRoom = require("./utils/replyCorouselToRoom")(client);
 
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMember&groupId=Ce938b6c2ba40812b0afa36e11078ec56
 exports.DataAPI = functions
@@ -41,8 +44,6 @@ exports.DataAPI = functions
       "Content-Type, Authorization, Content-Length, X-Requested-With, Accept"
     );
 
-    console.log("req", req);
-    console.log("query", req.query);
     const action = req.query.action;
 
     if (action !== undefined) {
@@ -408,45 +409,6 @@ Assignee : ${assigneeArrayRes[0].join()}
       }
     }
   });
-
-const reply = (replyToken, message) => {
-  return client.replyMessage(replyToken, {
-    type: "text",
-    text: message
-  });
-};
-
-const replyToRoom = (groupId, message) => {
-  return client.pushMessage(groupId, {
-    type: "text",
-    text: message
-  });
-};
-
-const replyCorouselToRoom = (groupId, UsersArray) => {
-  return client.pushMessage(groupId, {
-    type: "template",
-    altText: "this is a carousel template",
-    template: {
-      type: "carousel",
-      actions: [],
-      columns: UsersArray.map(member => {
-        return {
-          thumbnailImageUrl: member.pictureUrl,
-          title: member.displayName,
-          text: member.role,
-          actions: [
-            {
-              type: "postback",
-              label: "Make admin",
-              data: `Make admin ${member.userId}`
-            }
-          ]
-        };
-      })
-    }
-  });
-};
 
 const replyTaskCorouselToRoom = (groupId, TasksArray) => {
   return client.pushMessage(groupId, {
@@ -975,9 +937,10 @@ const getTaskDetailDueDate = async function(groupId) {
     .where("datetime", ">=", yesterday)
     .where("datetime", "<", today);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
-  //console.log("getTaskDetail = ", getTaskDetail);
+  console.log("getTaskDetail = ", getTaskDetail);
   await getTaskDetail.map(task => {
     if (task.datetime === anHourLater) {
+      console.log("เข้า anhourlater");
       TasksArray.push({
         condition: "anHour",
         userId: task.assignee,
@@ -985,6 +948,7 @@ const getTaskDetailDueDate = async function(groupId) {
         createby: task.createby
       });
     } else if (task.datetime === aHalfLater) {
+      console.log("เข้า ahalflater");
       TasksArray.push({
         condition: "aHalf",
         userId: task.assignee,
