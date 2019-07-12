@@ -1,4 +1,3 @@
-//ทำไมไม่อัพ
 const admin = require("firebase-admin");
 const serviceAccount = require("./serviceAccountKey.json");
 const functions = require("firebase-functions");
@@ -28,12 +27,6 @@ admin.initializeApp({
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection("data");
 
-// const getTasks = require("./utils/getTasks")(db);
-// const getTasksData = require("./utils/getTasksData");
-// const reply = require("./utils/reply")(client);
-// const replyToRoom = require("./utils/replyToRoom")(client);
-// const replyCorouselToRoom = require("./utils/replyCorouselToRoom")(client);
-
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMember&groupId=Ce938b6c2ba40812b0afa36e11078ec56
 exports.DataAPI = functions
   .region("asia-east2")
@@ -45,6 +38,8 @@ exports.DataAPI = functions
       "Content-Type, Authorization, Content-Length, X-Requested-With, Accept"
     );
 
+    console.log("req", req);
+    console.log("query", req.query);
     const action = req.query.action;
 
     if (action !== undefined) {
@@ -54,7 +49,7 @@ exports.DataAPI = functions
           const rtnData = await getMembers(groupId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "Error getting members" };
+          const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
       } else if (action === "getTasks") {
@@ -63,7 +58,7 @@ exports.DataAPI = functions
           const rtnData = await getTasks(groupId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "Error getting tasks" };
+          const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
       } else if (action === "updateTask") {
@@ -77,11 +72,11 @@ exports.DataAPI = functions
           if (rtnData) {
             return res.status(200).send(JSON.stringify({ result: rtnData }));
           } else {
-            const ret = { message: "Fail to update task" };
+            const ret = { message: "updateTask failed" };
             return res.status(400).send(ret);
           }
         } else {
-          const ret = { message: "Couldn't update--missing parameters" };
+          const ret = { message: "updateTask missing parameters" };
           return res.status(400).send(ret);
         }
       } else if (action === "deleteTask") {
@@ -92,7 +87,7 @@ exports.DataAPI = functions
           const rtnData = await deleteTask(groupId, taskId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "Error deleting task" };
+          const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
       } else if (action === "getYourTask") {
@@ -103,7 +98,7 @@ exports.DataAPI = functions
           const rtnData = await getYourTask(groupId, userId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "Error getting this userId's tasks" };
+          const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
       } else if (action === "getTaskDetailNotDone") {
@@ -113,7 +108,7 @@ exports.DataAPI = functions
           const rtnData = await getTaskDetailNotDone(groupId);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "Error getting not done task" };
+          const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
       } else if (action === "getTaskDetailbyDate") {
@@ -125,12 +120,12 @@ exports.DataAPI = functions
           const rtnData = await getTaskDetailbyDate(groupId, datetime);
           return res.status(200).send(JSON.stringify(rtnData));
         } else {
-          const ret = { message: "Error getting tasks by date" };
+          const ret = { message: "พังจริง" };
           return res.status(400).send(ret);
         }
       }
     } else {
-      const ret = { message: "action is not defined" };
+      const ret = { message: "พัง" };
       return res.status(400).send(ret);
     }
   });
@@ -411,6 +406,45 @@ Assignee : ${assigneeArrayRes[0].join()}
     }
   });
 
+const reply = (replyToken, message) => {
+  return client.replyMessage(replyToken, {
+    type: "text",
+    text: message
+  });
+};
+
+const replyToRoom = (groupId, message) => {
+  return client.pushMessage(groupId, {
+    type: "text",
+    text: message
+  });
+};
+
+const replyCorouselToRoom = (groupId, UsersArray) => {
+  return client.pushMessage(groupId, {
+    type: "template",
+    altText: "this is a carousel template",
+    template: {
+      type: "carousel",
+      actions: [],
+      columns: UsersArray.map(member => {
+        return {
+          thumbnailImageUrl: member.pictureUrl,
+          title: member.displayName,
+          text: member.role,
+          actions: [
+            {
+              type: "postback",
+              label: "Make admin",
+              data: `Make admin ${member.userId}`
+            }
+          ]
+        };
+      })
+    }
+  });
+};
+
 const replyTaskCorouselToRoom = (groupId, TasksArray) => {
   return client.pushMessage(groupId, {
     type: "template",
@@ -559,6 +593,26 @@ const getUsersData = function(db) {
       });
     });
     return UsersArray;
+  });
+};
+
+const getTasksData = function(db) {
+  return db.get().then(snapshot => {
+    let TasksArray = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      console.log("getTasksData = ", doc.id, "=>", data);
+      TasksArray.push({
+        taskId: doc.id,
+        title: data.title,
+        status: data.status,
+        assignee: data.assignee,
+        datetime: data.datetime,
+        createtime: data.createtime,
+        createby: data.createby
+      });
+    });
+    return TasksArray;
   });
 };
 
@@ -903,6 +957,18 @@ Assignee : ${assigneeArrayRes[0].join()}
     });
 };
 
+const getTasks = async function(groupId) {
+  // <-- Read data from database part -->
+  let tasksDocumentRef = db
+    .collection("data")
+    .doc(groupId)
+    .collection("tasks");
+  let getTasks = await getTasksData(tasksDocumentRef);
+  console.log("getTasks = ", getTasks);
+  return getTasks;
+  //<-- End read data part -->
+};
+
 const getTaskDetailNotDone = async function(groupId) {
   // <-- Read data from database part -->
   const yesterday = await ytdTimestamp();
@@ -938,10 +1004,9 @@ const getTaskDetailDueDate = async function(groupId) {
     .where("datetime", ">=", yesterday)
     .where("datetime", "<", today);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
-  console.log("getTaskDetail = ", getTaskDetail);
+  //console.log("getTaskDetail = ", getTaskDetail);
   await getTaskDetail.map(task => {
     if (task.datetime === anHourLater) {
-      console.log("เข้า anhourlater");
       TasksArray.push({
         condition: "anHour",
         userId: task.assignee,
@@ -949,7 +1014,6 @@ const getTaskDetailDueDate = async function(groupId) {
         createby: task.createby
       });
     } else if (task.datetime === aHalfLater) {
-      console.log("เข้า ahalflater");
       TasksArray.push({
         condition: "aHalf",
         userId: task.assignee,
@@ -1028,8 +1092,12 @@ const setAdmin = async function(groupId, MakeAdminSplitText) {
 
 const ytdTimestamp = function() {
   var ytd = new Date();
+  // var ytd = today.setDate(today.getDate() - 1);
+  // var ytdDate = new Date(ytd);
+  //console.log(ytd.toUTCString());
   var ytdTimestamp = ytd.setUTCHours(0, 0, 0, 0);
-  console.log("ytdTimestamp = ", ytdTimestamp);
+  //console.log(new Date(ytdTimestamp).toUTCString());
+  console.log("ytdtimestamp".ytdTimestamp);
   return ytdTimestamp;
 };
 
@@ -1040,38 +1108,52 @@ const tdTimestamp = function() {
   //console.log(tdDate.toUTCString());
   var tdTimestamp = td.setUTCHours(0, 0, 0, 0);
   //console.log(new Date(tdTimestamp).toUTCString());
-  console.log(tdTimestamp);
+  console.log("tdtimestamp", tdTimestamp);
   return tdTimestamp;
 };
 
 const ytdTimestampbyDate = function(datetime) {
   var date = new Date(datetime);
+  console.log(date);
   var ytdTimestampbyDate = date.setHours(0, 0, 0, 0);
+  console.log(ytdTimestampbyDate);
   return ytdTimestampbyDate;
 };
 
 const tdTimestampbyDate = function(datetime) {
   var td = new Date(datetime);
+  var today = td.setDate(td.getDate() + 1);
+  //var tdDate = new Date(today);
+  //console.log(tdDate.toUTCString());
   var tdTimestampbyDate = td.setUTCHours(0, 0, 0, 0);
+  //console.log(new Date(tdTimestamp).toUTCString());
+  //console.log(tdTimestamp);
   return tdTimestampbyDate;
 };
 
 const anHourLaterTimestamp = function() {
   const HOUR = 1000 * 60 * 60;
+  //console.log(Date.now());
   var anHourLater = Date.now() + HOUR;
-  var anHourLaterDate = new Date(anHourLater);
-  var anHourLaterParse = Date.parse(anHourLaterDate);
-  var anHourLaterTimestamp = new Date(anHourLaterParse).setSeconds(0);
-  console.log(new Date(anHourLaterTimestamp));
-  return anHourLaterTimestamp;
+  var anD = new Date(new Date(anHourLater));
+  var anDP = Date.parse(anD);
+  //console.log(anD.toUTCString());
+  //var anHourLater2 = new Date(anDP).setMinutes(0);
+  var anHourLater3 = new Date(anDP).setSeconds(0);
+  //console.log(anHourLater2);
+  console.log(new Date(anHourLater3));
+  return anHourLater3;
 };
 
 const ThirtyMinsLaterTimestamp = function() {
   const HALF = 1000 * 60 * 30;
+  //console.log(Date.now());
   var aHalfLater = Date.now() + HALF;
-  var aHalfLaterDate = new Date(new Date(aHalfLater));
-  var aHalfLaterParse = Date.parse(aHalfLaterDate);
-  var aHalfLaterTimestamp = new Date(aHalfLaterParse).setSeconds(0);
-  console.log(new Date(aHalfLaterTimestamp));
-  return aHalfLaterTimestamp;
+  var anD = new Date(new Date(aHalfLater));
+  var anDP = Date.parse(anD);
+  //console.log(anD.toUTCString());
+  var aHalfLater3 = new Date(anDP).setSeconds(0);
+  //console.log(anHourAgo2);
+  console.log(new Date(aHalfLater3));
+  return aHalfLater3;
 };
