@@ -184,7 +184,7 @@ exports.CronEndpoint = functions
             });
             return res.status(200).send("ผ่าน");
           } else if (action === "personalNotice") {
-            const ret = { message: "Personal Notice Successfully" };
+            const ret = { message: "OK" };
             console.log("groupsArray = ", GroupsArray);
             GroupsArray.map(async groupId => {
               const TasksArray = await getTaskDetailDueDate(groupId);
@@ -227,7 +227,7 @@ exports.CronEndpoint = functions
                 }
               });
             });
-            return res.status(200).send(ret);
+            return res.status(200).send("OK");
           }
         }
       }
@@ -404,7 +404,7 @@ Assignee : ${assigneeArrayRes[0].join()}
             return "reply successfully";
           })
           .catch(err => {
-            console.log("Error cancel request", err);
+            console.log("พัง", err);
           });
       }
     }
