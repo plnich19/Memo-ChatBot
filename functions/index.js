@@ -357,7 +357,7 @@ exports.Chatbot = functions
           })
           .then(() => {
             console.log("User successfully written!");
-            return "Finished writing task";
+            return "OK";
           })
           .catch(error => {
             console.error("Error writing document: ", error);
@@ -729,7 +729,7 @@ const updateMember = function(groupId, userId) {
     })
     .then(result => {
       console.log("Transaction success!");
-      return "Trainsaction success!";
+      return "OK2";
     })
     .catch(err => {
       console.log("Transaction failure:", err);
@@ -809,7 +809,7 @@ const createTask = async function(replyToken, groupId, userId, userSaid, bool) {
         console.log(dateLimit);
         console.log("Task successfully written!");
         replyDatePicker(replyToken, groupId, result.id, dateLimit);
-        return "Reply Date Picker successfully";
+        return "OK";
       })
       .catch(error => {
         console.error("Error writing document: ", error);
@@ -898,7 +898,7 @@ Assignee : ${assigneeArrayRes[0].join()}
       return "find successfully";
     })
     .catch(err => {
-      console.log("Error updating time", err);
+      console.log("พัง", err);
     });
 };
 
