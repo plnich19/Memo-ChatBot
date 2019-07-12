@@ -27,13 +27,43 @@ admin.initializeApp({
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection("data");
 
-const getTasks = require("./utils/getTasks")(db);
-const getTasksData = require("./utils/getTasksData");
 const reply = require("./utils/reply")(client);
 const replyToRoom = require("./utils/replyToRoom")(client);
 const replyCorouselToRoom = require("./utils/replyCorouselToRoom")(client);
+const replyTaskCorouselToRoom = require("./utils/replyTaskCorouselToRoom")(
+  client
+);
+const replyConfirmButton = require("./utils/replyConfirmButton")(client);
+const replyDatePicker = require("./utils/replyDatePicker")(client);
+const replyLiff = require("./utils/replyLiff")(client);
+const getTasksData = require("./utils/getTasksData");
+const getUsersData = require("./utils/getUsersData");
+const getTasks = require("./utils/getTasks")(db);
+const getTaskDetailNotDone = require("./utils/getTaskDetailNotDone")(db);
+const getTaskDetailbyDate = require("./utils/getTaskDetailbyDate")(db);
+const getTaskDetailDueDate = require("./utils/getTaskDetailDueDate")(db);
+const getGroupIds = require("./utils/getGroupIds");
+const getUserProfileById = require("./utils/getUserProfileById")(client);
+// const getTargetLimitForAdditionalMessages = require("./utils/getTargetLimitForAdditionalMessages")(
+//   request
+// );
+// const getNumberOfMessagesSentThisMonth = require("./utils/getNumberOfMessagesSentThisMonth")(
+//   request
+// );
+const getMembers = require("./utils/getMembers")(db);
+const getMemberProfilebyId = require("./utils/getMemberProfilebyId")(db);
+//const getMembersLength = require("./utils/getMembersLength");
+const DeleteUserData = require("./utils/DeleteUserData")(db);
+const DeleteGroupData = require("./utils/DeleteGroupData")(db);
 
-// usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMember&groupId=Ce938b6c2ba40812b0afa36e11078ec56
+const ytdTimestamp = require("./utils/ytdTimestamp");
+const tdTimestamp = require("./utils/tdTimestamp");
+const ytdTimestampbyDate = require("./utils/ytdTimestampbyDate");
+const tdTimestampbyDate = require("./utils/tdTimestampbyDate");
+const anHourLaterTimestamp = require("./utils/anHourLaterTimestamp");
+const ThirtyMinsLaterTimestamp = require("./utils/ThirtyMinsLaterTimestamp");
+
+// usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMembers&groupId=Ce938b6c2ba40812b0afa36e11078ec56
 exports.DataAPI = functions
   .region("asia-east2")
   .https.onRequest(async (req, res) => {
@@ -147,14 +177,16 @@ exports.CronEndpoint = functions
       return true;
     };
     if (action !== undefined) {
-      let getTargetLimit = await getTargetLimitForAdditionalMessages()
+      let getTargetLimit = await getTargetLimitForAdditionalMessages(
+        getLINE_HEADER
+      )
         .then(res => {
           return res.value;
         })
         .catch(error => {
           console.log("error", error);
         });
-      let getNumberMsg = await getNumberOfMessagesSentThisMonth()
+      let getNumberMsg = await getNumberOfMessagesSentThisMonth(getLINE_HEADER)
         .then(res => {
           return res.totalUsage;
         })
@@ -410,250 +442,6 @@ Assignee : ${assigneeArrayRes[0].join()}
     }
   });
 
-const replyTaskCorouselToRoom = (groupId, TasksArray) => {
-  return client.pushMessage(groupId, {
-    type: "template",
-    altText: "this is a carousel template",
-    template: {
-      type: "carousel",
-      actions: [],
-      columns: TasksArray.map(task => {
-        var event = new Date(task.datetime);
-        var date = event.toDateString();
-        return {
-          title: task.title,
-          text: `Status: ${task.status} Date: ${date}`,
-          actions: [
-            {
-              type: "message",
-              label: "Action 1",
-              text: "Action 1"
-            }
-          ]
-        };
-      })
-    }
-  });
-};
-
-const replyConfirmButton = replyToken => {
-  return client.replyMessage(replyToken, {
-    type: "template",
-    altText: "this is a buttons template",
-    template: {
-      type: "buttons",
-      actions: [
-        {
-          type: "postback",
-          label: "ยืนยัน",
-          data: "confirm"
-        }
-      ],
-      title: "ยืนยันการใช้งาน",
-      text: "คลิกยืนยันเพื่อยืนยันตัวตนนะครับ"
-    }
-  });
-};
-
-const replyDatePicker = (replyToken, groupId, taskId, dateLimit) => {
-  return client.pushMessage(groupId, {
-    type: "template",
-    altText: "This is a buttons template",
-    template: {
-      type: "buttons",
-      title: "เลือกวันที่เวลา",
-      text: "เลือกวัน deadline ไหม? ไม่เลือกก็ได้นะ",
-      actions: [
-        {
-          type: "datetimepicker",
-          label: "เลือกวันเวลา",
-          data: `taskId=${taskId}`,
-          mode: "datetime",
-          initial: dateLimit,
-          min: dateLimit
-        },
-        {
-          type: "postback",
-          label: "Cancel",
-          data: `cancel=${taskId}`
-        }
-      ]
-    }
-  });
-};
-
-const replyLiff = (groupId, message) => {
-  return client.pushMessage(groupId, {
-    type: "flex",
-    altText: message,
-    contents: {
-      type: "bubble",
-      body: {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "box",
-            layout: "vertical",
-            spacing: "sm",
-            margin: "lg",
-            contents: [
-              {
-                type: "box",
-                layout: "baseline",
-                spacing: "sm",
-                contents: [
-                  {
-                    type: "text",
-                    text: message,
-                    flex: 5,
-                    size: "sm",
-                    color: "#666666",
-                    wrap: true
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      footer: {
-        type: "box",
-        layout: "vertical",
-        flex: 0,
-        spacing: "sm",
-        contents: [
-          {
-            type: "button",
-            action: {
-              type: "uri",
-              label: "Task list",
-              uri: "line://app/1568521906-qP1vaA4y"
-            },
-            height: "sm",
-            style: "link"
-          },
-          {
-            type: "spacer",
-            size: "sm"
-          }
-        ]
-      }
-    }
-  });
-};
-
-const getUsersData = function(db) {
-  return db.get().then(snapshot => {
-    let UsersArray = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      console.log("getUsersData = ", doc.id, "=>", data);
-
-      UsersArray.push({
-        userId: doc.id,
-        displayName: data.displayName,
-        pictureUrl: data.pictureUrl,
-        role: data.role
-      });
-    });
-    return UsersArray;
-  });
-};
-
-const getGroupIds = function(db) {
-  return db.get().then(snapshot => {
-    let GroupsArray = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      console.log("getGroupsData = ", doc.id, "=>", data);
-
-      GroupsArray.push(doc.id);
-    });
-
-    return GroupsArray;
-  });
-};
-
-const getUserProfileById = function(userId) {
-  return client.getProfile(userId).catch(err => {
-    console.log("getUserProfile err", err);
-  });
-};
-
-const getGroupMemberIds = function(userId) {
-  return client.getGroupMemberIds(userId).catch(err => {
-    console.log("getGroupMemberIds err", err);
-  });
-};
-
-const getTargetLimitForAdditionalMessages = bodyResponse => {
-  return request({
-    method: `GET`,
-    uri: `https://api.line.me/v2/bot/message/quota`,
-    headers: getLINE_HEADER,
-    json: true
-  }).then(response => {
-    return response;
-  });
-};
-
-const getNumberOfMessagesSentThisMonth = bodyResponse => {
-  return request({
-    method: `GET`,
-    uri: `https://api.line.me/v2/bot/message/quota/consumption`,
-    headers: getLINE_HEADER,
-    json: true
-  }).then(response => {
-    return response;
-  });
-};
-
-const DeleteUserData = function(groupId, userId) {
-  let membersDocumentRef = db
-    .collection("data")
-    .doc(groupId)
-    .collection("members")
-    .doc(userId);
-  return membersDocumentRef.delete();
-};
-
-const DeleteGroupData = function(groupId) {
-  let groupDocumentRef = db.collection("data").doc(groupId);
-  return groupDocumentRef.delete();
-};
-
-const getMembers = async function(groupId) {
-  // <-- Read data from database part -->
-  let membersDocumentRef = db
-    .collection("data")
-    .doc(groupId)
-    .collection("members");
-  let getUsers = await getUsersData(membersDocumentRef);
-  console.log("(getMembers) getUsers = ", getUsers);
-  return getUsers;
-  //<-- End read data part -->
-};
-
-const getMembersLength = async function(GroupsArray) {
-  var MembersCount = 0;
-  console.log("type of MembersCount = ", typeof MembersCount);
-
-  const total = GroupsArray.map(async groupId => {
-    const getUsers = await getMembers(groupId);
-    console.log("getUsers = ", getUsers);
-    var size = Number(Object.keys(getUsers).length);
-    console.log("size = ", size);
-    console.log("type of size = ", typeof size);
-    MembersCount = MembersCount + size;
-    console.log("MembersCount ใน map = ", MembersCount);
-    return MembersCount;
-  });
-  const total2 = await Promise.all(total);
-  console.log("MembersCount นอก map = ", total2);
-  return total2;
-};
-
 const getMemberProfile = async function(groupId, name, bool) {
   var writeTask = true;
   const isEmpty = function(obj) {
@@ -690,28 +478,45 @@ const getMemberProfile = async function(groupId, name, bool) {
   return writeTask;
 };
 
-const getMemberProfilebyId = async function(groupId, userId) {
-  //<-- Read Document Part-->
-  const getDisplayName = function(db) {
-    return db
-      .get()
-      .then(doc => {
-        docdata = doc.data();
-        return docdata.displayName;
-      })
-      .catch(err => {
-        console.log("Error getting document:", err);
-      });
-  };
-  //<--End Read Document Part-->
-  let FindmembersDocumentRef = db
-    .collection("data")
-    .doc(groupId)
-    .collection("members")
-    .doc(userId);
-  const displayName = await getDisplayName(FindmembersDocumentRef);
-  console.log("displayName นอก = ", displayName);
-  return displayName;
+const getTargetLimitForAdditionalMessages = bodyResponse => {
+  return request({
+    method: `GET`,
+    uri: `https://api.line.me/v2/bot/message/quota`,
+    headers: getLINE_HEADER,
+    json: true
+  }).then(response => {
+    return response;
+  });
+};
+
+const getNumberOfMessagesSentThisMonth = bodyResponse => {
+  return request({
+    method: `GET`,
+    uri: `https://api.line.me/v2/bot/message/quota/consumption`,
+    headers: getLINE_HEADER,
+    json: true
+  }).then(response => {
+    return response;
+  });
+};
+
+const getMembersLength = async function(GroupsArray) {
+  var MembersCount = 0;
+  console.log("type of MembersCount = ", typeof MembersCount);
+
+  const total = GroupsArray.map(async groupId => {
+    const getUsers = await getMembers(groupId);
+    console.log("getUsers = ", getUsers);
+    var size = Number(Object.keys(getUsers).length);
+    console.log("size = ", size);
+    console.log("type of size = ", typeof size);
+    MembersCount = MembersCount + size;
+    console.log("MembersCount ใน map = ", MembersCount);
+    return MembersCount;
+  });
+  const total2 = await Promise.all(total);
+  console.log("MembersCount นอก map = ", total2);
+  return total2;
 };
 
 const updateMember = function(groupId, userId) {
@@ -902,82 +707,6 @@ Assignee : ${assigneeArrayRes[0].join()}
     });
 };
 
-const getTaskDetailNotDone = async function(groupId) {
-  // <-- Read data from database part -->
-  const yesterday = await ytdTimestamp();
-  const today = await tdTimestamp();
-  let FindtasksDocumentRef = db
-    .collection("data")
-    .doc(groupId)
-    .collection("tasks")
-    .where("status", "==", false)
-    .where("datetime", ">=", yesterday)
-    .where("datetime", "<", today);
-  let getTaskDetail = await getTasksData(FindtasksDocumentRef);
-  console.log("getTaskDetail = ", getTaskDetail);
-  return getTaskDetail;
-  //<-- End read data part -->
-};
-
-const getTaskDetailDueDate = async function(groupId) {
-  console.log("groupID = ", groupId);
-  // <-- Read data from database part -->
-  var TasksArray = [];
-  const yesterday = await ytdTimestamp();
-  const today = await tdTimestamp();
-  const anHourLater = await anHourLaterTimestamp();
-  const aHalfLater = await ThirtyMinsLaterTimestamp();
-  console.log("anHourLater = ", anHourLater);
-  console.log("aHalfLater = ", aHalfLater);
-  let FindtasksDocumentRef = db
-    .collection("data")
-    .doc(groupId)
-    .collection("tasks")
-    .where("status", "==", false)
-    .where("datetime", ">=", yesterday)
-    .where("datetime", "<", today);
-  let getTaskDetail = await getTasksData(FindtasksDocumentRef);
-  console.log("getTaskDetail = ", getTaskDetail);
-  await getTaskDetail.map(task => {
-    if (task.datetime === anHourLater) {
-      console.log("เข้า anhourlater");
-      TasksArray.push({
-        condition: "anHour",
-        userId: task.assignee,
-        title: task.title,
-        createby: task.createby
-      });
-    } else if (task.datetime === aHalfLater) {
-      console.log("เข้า ahalflater");
-      TasksArray.push({
-        condition: "aHalf",
-        userId: task.assignee,
-        title: task.title,
-        createby: task.createby
-      });
-    }
-  });
-  console.log("TasksArray = ", TasksArray);
-  return TasksArray;
-  //<-- End read data part -->};
-};
-
-const getTaskDetailbyDate = async function(groupId, datetime) {
-  // <-- Read data from database part -->
-  const yesterday = await ytdTimestampbyDate(datetime);
-  const today = await tdTimestampbyDate(datetime);
-  let FindtasksDocumentRef = db
-    .collection("data")
-    .doc(groupId)
-    .collection("tasks")
-    .where("datetime", ">=", yesterday)
-    .where("datetime", "<", today);
-  let getTaskDetail = await getTasksData(FindtasksDocumentRef);
-  console.log("getTaskDetail = ", getTaskDetail);
-  return getTaskDetail;
-  //<-- End read data part -->
-};
-
 const getYourTask = async function(groupId, userId) {
   // <-- Read data from database part -->
   let FindtasksDocumentRef = db
@@ -1023,54 +752,4 @@ const setAdmin = async function(groupId, MakeAdminSplitText) {
     .catch(err => {
       console.log("Transaction failure:", err);
     });
-};
-
-const ytdTimestamp = function() {
-  var ytd = new Date();
-  var ytdTimestamp = ytd.setUTCHours(0, 0, 0, 0);
-  console.log("ytdtimestamp".ytdTimestamp);
-  return ytdTimestamp;
-};
-
-const tdTimestamp = function() {
-  var td = new Date();
-  var today = td.setDate(td.getDate() + 1);
-  var tdTimestamp = td.setUTCHours(0, 0, 0, 0);
-  console.log("tdtimestamp", tdTimestamp);
-  return tdTimestamp;
-};
-
-const ytdTimestampbyDate = function(datetime) {
-  var date = new Date(datetime);
-  console.log(date);
-  var ytdTimestampbyDate = date.setHours(0, 0, 0, 0);
-  console.log(ytdTimestampbyDate);
-  return ytdTimestampbyDate;
-};
-
-const tdTimestampbyDate = function(datetime) {
-  var td = new Date(datetime);
-  var today = td.setDate(td.getDate() + 1);
-  var tdTimestampbyDate = td.setUTCHours(0, 0, 0, 0);
-  return tdTimestampbyDate;
-};
-
-const anHourLaterTimestamp = function() {
-  const HOUR = 1000 * 60 * 60;
-  var anHourLater = Date.now() + HOUR;
-  var anHourLaterDate = new Date(new Date(anHourLater));
-  var anHourLaterParse = Date.parse(anHourLaterDate);
-  var anHourLaterTimestamp = new Date(anHourLaterParse).setSeconds(0);
-  console.log(new Date(anHourLaterTimestamp));
-  return anHourLaterTimestamp;
-};
-
-const ThirtyMinsLaterTimestamp = function() {
-  const HALF = 1000 * 60 * 30;
-  var aHalfLater = Date.now() + HALF;
-  var aHalfLaterDate = new Date(new Date(aHalfLater));
-  var aHalfLaterParse = Date.parse(aHalfLaterDate);
-  var aHalfLaterTimestamp = new Date(aHalfLaterParse).setSeconds(0);
-  console.log(new Date(aHalfLaterTimestamp));
-  return aHalfLaterTimestamp;
 };
