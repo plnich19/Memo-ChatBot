@@ -1028,23 +1028,29 @@ const setAdmin = async function(groupId, MakeAdminSplitText) {
 const ytdTimestamp = function() {
   var ytd = new Date();
   var ytdTimestamp = ytd.setUTCHours(0, 0, 0, 0);
+  console.log("ytdtimestamp".ytdTimestamp);
   return ytdTimestamp;
 };
 
 const tdTimestamp = function() {
   var td = new Date();
+  var today = td.setDate(td.getDate() + 1);
   var tdTimestamp = td.setUTCHours(0, 0, 0, 0);
+  console.log("tdtimestamp", tdTimestamp);
   return tdTimestamp;
 };
 
 const ytdTimestampbyDate = function(datetime) {
   var date = new Date(datetime);
+  console.log(date);
   var ytdTimestampbyDate = date.setHours(0, 0, 0, 0);
+  console.log(ytdTimestampbyDate);
   return ytdTimestampbyDate;
 };
 
 const tdTimestampbyDate = function(datetime) {
   var td = new Date(datetime);
+  var today = td.setDate(td.getDate() + 1);
   var tdTimestampbyDate = td.setUTCHours(0, 0, 0, 0);
   return tdTimestampbyDate;
 };
@@ -1052,7 +1058,7 @@ const tdTimestampbyDate = function(datetime) {
 const anHourLaterTimestamp = function() {
   const HOUR = 1000 * 60 * 60;
   var anHourLater = Date.now() + HOUR;
-  var anHourLaterDate = new Date(anHourLater);
+  var anHourLaterDate = new Date(new Date(anHourLater));
   var anHourLaterParse = Date.parse(anHourLaterDate);
   var anHourLaterTimestamp = new Date(anHourLaterParse).setSeconds(0);
   console.log(new Date(anHourLaterTimestamp));
