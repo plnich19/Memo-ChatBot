@@ -27,6 +27,12 @@ admin.initializeApp({
 let db = admin.firestore();
 var dataOneDocumentRef = db.collection("data");
 
+// const getTasks = require("./utils/getTasks")(db);
+// const getTasksData = require("./utils/getTasksData");
+// const reply = require("./utils/reply")(client);
+// const replyToRoom = require("./utils/replyToRoom")(client);
+// const replyCorouselToRoom = require("./utils/replyCorouselToRoom")(client);
+
 // usage : https://asia-east2-memo-chatbot.cloudfunctions.net/DataAPI/?action=getMember&groupId=Ce938b6c2ba40812b0afa36e11078ec56
 exports.DataAPI = functions
   .region("asia-east2")
@@ -38,8 +44,6 @@ exports.DataAPI = functions
       "Content-Type, Authorization, Content-Length, X-Requested-With, Accept"
     );
 
-    console.log("req", req);
-    console.log("query", req.query);
     const action = req.query.action;
 
     if (action !== undefined) {
@@ -136,7 +140,7 @@ exports.CronEndpoint = functions
   .https.onRequest(async (req, res) => {
     const action = req.query.action;
     const message = req.query.message;
-    const isEmpty = function (obj) {
+    const isEmpty = function(obj) {
       for (var key in obj) {
         if (obj.hasOwnProperty(key)) return false;
       }
@@ -191,14 +195,14 @@ exports.CronEndpoint = functions
                     return replyToRoom(
                       task.createby,
                       `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
-                      task.title
+                        task.title
                       } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
                     );
                   } else if (task.condition === "aHalf") {
                     return replyToRoom(
                       task.createby,
                       `คุณมีงาน ${
-                      task.title
+                        task.title
                       } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
                     );
                   }
@@ -208,14 +212,14 @@ exports.CronEndpoint = functions
                       return replyToRoom(
                         userId,
                         `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
-                        task.title
+                          task.title
                         } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
                       );
                     } else if (task.condition === "aHalf") {
                       return replyToRoom(
                         userId,
                         `คุณมีงาน ${
-                        task.title
+                          task.title
                         } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
                       );
                     }
@@ -309,8 +313,8 @@ exports.Chatbot = functions
       const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}
           คำแนะนำการใช้งานน้องโน๊ต
           - คุณ ${
-        userProfile.displayName
-        } โปรดกดยืนยันการใช้งานน้องโน๊ตด้านล่างด้วยนะครับ
+            userProfile.displayName
+          } โปรดกดยืนยันการใช้งานน้องโน๊ตด้านล่างด้วยนะครับ
           คำสั่ง
           - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
           - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
@@ -339,7 +343,7 @@ exports.Chatbot = functions
         const userProfile = await getUserProfileById(userId);
         const welComeMsg = `คุณ ${
           userProfile.displayName
-          } เข้าร่วมการใช้งานแล้ว`;
+        } เข้าร่วมการใช้งานแล้ว`;
         reply(replyToken, welComeMsg);
         // <---Write data part-->
         dataOneDocumentRef
@@ -380,7 +384,7 @@ exports.Chatbot = functions
           .then(async doc => {
             let docdata = doc.data();
             let assigneearray = [];
-            const assigneeArray = async function (assignee) {
+            const assigneeArray = async function(assignee) {
               const arraypromise = await assignee.map(async userId => {
                 const displayName = await getMemberProfilebyId(groupId, userId);
                 assigneearray.push(displayName);
@@ -405,45 +409,6 @@ Assignee : ${assigneeArrayRes[0].join()}
       }
     }
   });
-
-const reply = (replyToken, message) => {
-  return client.replyMessage(replyToken, {
-    type: "text",
-    text: message
-  });
-};
-
-const replyToRoom = (groupId, message) => {
-  return client.pushMessage(groupId, {
-    type: "text",
-    text: message
-  });
-};
-
-const replyCorouselToRoom = (groupId, UsersArray) => {
-  return client.pushMessage(groupId, {
-    type: "template",
-    altText: "this is a carousel template",
-    template: {
-      type: "carousel",
-      actions: [],
-      columns: UsersArray.map(member => {
-        return {
-          thumbnailImageUrl: member.pictureUrl,
-          title: member.displayName,
-          text: member.role,
-          actions: [
-            {
-              type: "postback",
-              label: "Make admin",
-              data: `Make admin ${member.userId}`
-            }
-          ]
-        };
-      })
-    }
-  });
-};
 
 const replyTaskCorouselToRoom = (groupId, TasksArray) => {
   return client.pushMessage(groupId, {
@@ -578,7 +543,7 @@ const replyLiff = (groupId, message) => {
   });
 };
 
-const getUsersData = function (db) {
+const getUsersData = function(db) {
   return db.get().then(snapshot => {
     let UsersArray = [];
     snapshot.forEach(doc => {
@@ -596,27 +561,7 @@ const getUsersData = function (db) {
   });
 };
 
-const getTasksData = function (db) {
-  return db.get().then(snapshot => {
-    let TasksArray = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      console.log("getTasksData = ", doc.id, "=>", data);
-      TasksArray.push({
-        taskId: doc.id,
-        title: data.title,
-        status: data.status,
-        assignee: data.assignee,
-        datetime: data.datetime,
-        createtime: data.createtime,
-        createby: data.createby
-      });
-    });
-    return TasksArray;
-  });
-};
-
-const getGroupIds = function (db) {
+const getGroupIds = function(db) {
   return db.get().then(snapshot => {
     let GroupsArray = [];
     snapshot.forEach(doc => {
@@ -630,13 +575,13 @@ const getGroupIds = function (db) {
   });
 };
 
-const getUserProfileById = function (userId) {
+const getUserProfileById = function(userId) {
   return client.getProfile(userId).catch(err => {
     console.log("getUserProfile err", err);
   });
 };
 
-const getGroupMemberIds = function (userId) {
+const getGroupMemberIds = function(userId) {
   return client.getGroupMemberIds(userId).catch(err => {
     console.log("getGroupMemberIds err", err);
   });
@@ -664,7 +609,7 @@ const getNumberOfMessagesSentThisMonth = bodyResponse => {
   });
 };
 
-const DeleteUserData = function (groupId, userId) {
+const DeleteUserData = function(groupId, userId) {
   let membersDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -673,12 +618,12 @@ const DeleteUserData = function (groupId, userId) {
   return membersDocumentRef.delete();
 };
 
-const DeleteGroupData = function (groupId) {
+const DeleteGroupData = function(groupId) {
   let groupDocumentRef = db.collection("data").doc(groupId);
   return groupDocumentRef.delete();
 };
 
-const getMembers = async function (groupId) {
+const getMembers = async function(groupId) {
   // <-- Read data from database part -->
   let membersDocumentRef = db
     .collection("data")
@@ -690,7 +635,7 @@ const getMembers = async function (groupId) {
   //<-- End read data part -->
 };
 
-const getMembersLength = async function (GroupsArray) {
+const getMembersLength = async function(GroupsArray) {
   var MembersCount = 0;
   console.log("type of MembersCount = ", typeof MembersCount);
 
@@ -709,9 +654,9 @@ const getMembersLength = async function (GroupsArray) {
   return total2;
 };
 
-const getMemberProfile = async function (groupId, name, bool) {
+const getMemberProfile = async function(groupId, name, bool) {
   var writeTask = true;
-  const isEmpty = function (obj) {
+  const isEmpty = function(obj) {
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) return false;
     }
@@ -745,9 +690,9 @@ const getMemberProfile = async function (groupId, name, bool) {
   return writeTask;
 };
 
-const getMemberProfilebyId = async function (groupId, userId) {
+const getMemberProfilebyId = async function(groupId, userId) {
   //<-- Read Document Part-->
-  const getDisplayName = function (db) {
+  const getDisplayName = function(db) {
     return db
       .get()
       .then(doc => {
@@ -769,7 +714,7 @@ const getMemberProfilebyId = async function (groupId, userId) {
   return displayName;
 };
 
-const updateMember = function (groupId, userId) {
+const updateMember = function(groupId, userId) {
   let FindmembersDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -791,7 +736,7 @@ const updateMember = function (groupId, userId) {
     });
 };
 
-const createTask = async function (replyToken, groupId, userId, userSaid, bool) {
+const createTask = async function(replyToken, groupId, userId, userSaid, bool) {
   let assigneeIdArray = [];
   var assigneeName = [];
   var tasktitle = userSaid.split("#to")[0].trim();
@@ -805,7 +750,7 @@ const createTask = async function (replyToken, groupId, userId, userSaid, bool) 
         assigneeName.push(assigneeArray[i].split("@")[1]);
       }
     }
-    const getAssigneeIdArray = async function (assigneeName) {
+    const getAssigneeIdArray = async function(assigneeName) {
       var getAssigneeData = [];
       assigneeName.forEach(async name => {
         getMemberProfile(groupId, name, false);
@@ -875,7 +820,7 @@ const createTask = async function (replyToken, groupId, userId, userSaid, bool) 
   }
 };
 
-const updateTask = async function (groupId, taskId, data) {
+const updateTask = async function(groupId, taskId, data) {
   let FindtasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -903,7 +848,7 @@ const updateTask = async function (groupId, taskId, data) {
   }));
 };
 
-const updateTime = function (replyToken, groupId, taskId, datetime) {
+const updateTime = function(replyToken, groupId, taskId, datetime) {
   var dateParse = Date.parse(datetime);
   const HOUR = 7 * 1000 * 60 * 60;
   let datetimeUpdate = dateParse - HOUR;
@@ -930,7 +875,7 @@ const updateTime = function (replyToken, groupId, taskId, datetime) {
         "MMMM Do YYYY, h:mm a"
       );
       let assigneearray = [];
-      const assigneeArray = async function (assignee) {
+      const assigneeArray = async function(assignee) {
         const arraypromise = await assignee.map(async userId => {
           const displayName = await getMemberProfilebyId(groupId, userId);
           assigneearray.push(displayName);
@@ -957,19 +902,7 @@ Assignee : ${assigneeArrayRes[0].join()}
     });
 };
 
-const getTasks = async function (groupId) {
-  // <-- Read data from database part -->
-  let tasksDocumentRef = db
-    .collection("data")
-    .doc(groupId)
-    .collection("tasks");
-  let getTasks = await getTasksData(tasksDocumentRef);
-  console.log("getTasks = ", getTasks);
-  return getTasks;
-  //<-- End read data part -->
-};
-
-const getTaskDetailNotDone = async function (groupId) {
+const getTaskDetailNotDone = async function(groupId) {
   // <-- Read data from database part -->
   const yesterday = await ytdTimestamp();
   const today = await tdTimestamp();
@@ -986,7 +919,7 @@ const getTaskDetailNotDone = async function (groupId) {
   //<-- End read data part -->
 };
 
-const getTaskDetailDueDate = async function (groupId) {
+const getTaskDetailDueDate = async function(groupId) {
   console.log("groupID = ", groupId);
   // <-- Read data from database part -->
   var TasksArray = [];
@@ -1004,9 +937,10 @@ const getTaskDetailDueDate = async function (groupId) {
     .where("datetime", ">=", yesterday)
     .where("datetime", "<", today);
   let getTaskDetail = await getTasksData(FindtasksDocumentRef);
-  //console.log("getTaskDetail = ", getTaskDetail);
+  console.log("getTaskDetail = ", getTaskDetail);
   await getTaskDetail.map(task => {
     if (task.datetime === anHourLater) {
+      console.log("เข้า anhourlater");
       TasksArray.push({
         condition: "anHour",
         userId: task.assignee,
@@ -1014,6 +948,7 @@ const getTaskDetailDueDate = async function (groupId) {
         createby: task.createby
       });
     } else if (task.datetime === aHalfLater) {
+      console.log("เข้า ahalflater");
       TasksArray.push({
         condition: "aHalf",
         userId: task.assignee,
@@ -1027,7 +962,7 @@ const getTaskDetailDueDate = async function (groupId) {
   //<-- End read data part -->};
 };
 
-const getTaskDetailbyDate = async function (groupId, datetime) {
+const getTaskDetailbyDate = async function(groupId, datetime) {
   // <-- Read data from database part -->
   const yesterday = await ytdTimestampbyDate(datetime);
   const today = await tdTimestampbyDate(datetime);
@@ -1043,7 +978,7 @@ const getTaskDetailbyDate = async function (groupId, datetime) {
   //<-- End read data part -->
 };
 
-const getYourTask = async function (groupId, userId) {
+const getYourTask = async function(groupId, userId) {
   // <-- Read data from database part -->
   let FindtasksDocumentRef = db
     .collection("data")
@@ -1056,7 +991,7 @@ const getYourTask = async function (groupId, userId) {
   //<-- End read data part -->
 };
 
-const deleteTask = function (groupId, taskId) {
+const deleteTask = function(groupId, taskId) {
   let tasksDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -1074,7 +1009,7 @@ const deleteTask = function (groupId, taskId) {
     });
 };
 
-const setAdmin = async function (groupId, MakeAdminSplitText) {
+const setAdmin = async function(groupId, MakeAdminSplitText) {
   let FindmembersDocumentRef = db
     .collection("data")
     .doc(groupId)
@@ -1090,31 +1025,37 @@ const setAdmin = async function (groupId, MakeAdminSplitText) {
     });
 };
 
-const ytdTimestamp = function () {
+const ytdTimestamp = function() {
   var ytd = new Date();
   var ytdTimestamp = ytd.setUTCHours(0, 0, 0, 0);
+  console.log("ytdTimestamp = ", ytdTimestamp);
   return ytdTimestamp;
 };
 
-const tdTimestamp = function () {
+const tdTimestamp = function() {
   var td = new Date();
+  var today = td.setDate(td.getDate() + 1);
+  //var tdDate = new Date(today);
+  //console.log(tdDate.toUTCString());
   var tdTimestamp = td.setUTCHours(0, 0, 0, 0);
+  //console.log(new Date(tdTimestamp).toUTCString());
+  console.log(tdTimestamp);
   return tdTimestamp;
 };
 
-const ytdTimestampbyDate = function (datetime) {
+const ytdTimestampbyDate = function(datetime) {
   var date = new Date(datetime);
   var ytdTimestampbyDate = date.setHours(0, 0, 0, 0);
   return ytdTimestampbyDate;
 };
 
-const tdTimestampbyDate = function (datetime) {
+const tdTimestampbyDate = function(datetime) {
   var td = new Date(datetime);
   var tdTimestampbyDate = td.setUTCHours(0, 0, 0, 0);
   return tdTimestampbyDate;
 };
 
-const anHourLaterTimestamp = function () {
+const anHourLaterTimestamp = function() {
   const HOUR = 1000 * 60 * 60;
   var anHourLater = Date.now() + HOUR;
   var anHourLaterDate = new Date(anHourLater);
@@ -1124,7 +1065,7 @@ const anHourLaterTimestamp = function () {
   return anHourLaterTimestamp;
 };
 
-const ThirtyMinsLaterTimestamp = function () {
+const ThirtyMinsLaterTimestamp = function() {
   const HALF = 1000 * 60 * 30;
   var aHalfLater = Date.now() + HALF;
   var aHalfLaterDate = new Date(new Date(aHalfLater));
