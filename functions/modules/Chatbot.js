@@ -1,4 +1,5 @@
 module.exports = function Chatbot({
+  db,
   functions,
   getMembers,
   replyCorouselToRoom,
@@ -12,6 +13,7 @@ module.exports = function Chatbot({
   DeleteUserData,
   reply,
   getUserProfileById,
+  getMemberProfilebyId,
   setAdmin,
   updateTime
 }) {
