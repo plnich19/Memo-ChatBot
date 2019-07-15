@@ -6,15 +6,14 @@ const request = require("request-promise");
 
 // refactor: create config
 
-const config = require("./config/config");
-console.log("config = ", config);
+const config = require("./modules/config");
 
 const getLINE_config = config.getLINE_config;
+const getLINE_HEADER = config.getLINE_HEADER;
 // create LINE SDK client
 const client = new line.Client(getLINE_config);
 
 // refactor: get this value from config files
-const getLINE_HEADER = config.getLINE_HEADER;
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
