@@ -1,4 +1,3 @@
 node_modules
-functions/serviceAccountKey.json
 functions/modules/config.js
 functions/serviceAccountKey.json
