@@ -4,16 +4,11 @@ const functions = require("firebase-functions");
 const line = require("@line/bot-sdk");
 const request = require("request-promise");
 
-// refactor: create config
-
 const config = require("./modules/config");
-
 const getLINE_config = config.getLINE_config;
 const getLINE_HEADER = config.getLINE_HEADER;
-// create LINE SDK client
-const client = new line.Client(getLINE_config);
 
-// refactor: get this value from config files
+const client = new line.Client(getLINE_config);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
