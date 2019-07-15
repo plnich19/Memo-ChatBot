@@ -12,7 +12,7 @@ const client = new line.Client(getLINE_config);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: config.databaseURL //rrefactory: move to config value
+  databaseURL: config.databaseURL
 });
 
 const db = admin.firestore();
