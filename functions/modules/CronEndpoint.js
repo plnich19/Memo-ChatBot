@@ -1,6 +1,7 @@
 module.exports = function CronEndpoint({
   functions,
   getLINE_HEADER,
+  dataOneDocumentRef,
   getTargetLimitForAdditionalMessages,
   getNumberOfMessagesSentThisMonth,
   getGroupIds,
