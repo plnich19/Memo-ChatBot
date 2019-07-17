@@ -18,23 +18,25 @@ admin.initializeApp({
 const db = admin.firestore();
 const dataOneDocumentRef = db.collection("data");
 
-const reply = require("./utils/reply")(client);
-const replyToRoom = require("./utils/replyToRoom")(client);
-const replyCorouselToRoom = require("./utils/replyCorouselToRoom")(client);
-const replyConfirmButton = require("./utils/replyConfirmButton")(client);
-const replyLiff = require("./utils/replyLiff")(client);
+const reply = require("./utils/reply/reply")(client);
+const replyToRoom = require("./utils/reply/replyToRoom")(client);
+const replyCorouselToRoom = require("./utils/reply/replyCorouselToRoom")(
+  client
+);
+const replyConfirmButton = require("./utils/reply/replyConfirmButton")(client);
+const replyLiff = require("./utils/reply/replyLiff")(client);
 
-const getTasks = require("./utils/getTasks")(db);
-const getYourTask = require("./utils/getYourTask")(db);
-const getTaskDetailNotDone = require("./utils/getTaskDetailNotDone")(db);
-const getTaskDetailbyDate = require("./utils/getTaskDetailbyDate")(db);
-const getTaskDetailDueDate = require("./utils/getTaskDetailDueDate")(db);
+const getTasks = require("./utils/Tasks/getTasks")(db);
+const getYourTask = require("./utils/Tasks/getYourTask")(db);
+const getTaskDetailNotDone = require("./utils/Tasks/getTaskDetailNotDone")(db);
+const getTaskDetailbyDate = require("./utils/Tasks/getTaskDetailbyDate")(db);
+const getTaskDetailDueDate = require("./utils/Tasks/getTaskDetailDueDate")(db);
 const getGroupIds = require("./utils/getGroupIds");
 const getUserProfileById = require("./utils/getUserProfileById")(client);
-const getTargetLimitForAdditionalMessages = require("./utils/getTargetLimitForAdditionalMessages")(
+const getTargetLimitForAdditionalMessages = require("./utils/getLineAPI/getTargetLimitForAdditionalMessages")(
   request
 );
-const getNumberOfMessagesSentThisMonth = require("./utils/getNumberOfMessagesSentThisMonth")(
+const getNumberOfMessagesSentThisMonth = require("./utils/getLineAPI/getNumberOfMessagesSentThisMonth")(
   request
 );
 const getMembers = require("./utils/getMembers")(db);
@@ -45,9 +47,9 @@ const DeleteUserData = require("./utils/DeleteUserData")(db);
 const DeleteGroupData = require("./utils/DeleteGroupData")(db);
 const updateMember = require("./utils/updateMember")(db);
 const createTask = require("./utils/createTask")(db, client);
-const updateTask = require("./utils/updateTask")(db);
+const updateTask = require("./utils/Tasks/updateTask")(db);
 const updateTime = require("./utils/updateTime")(db, client);
-const deleteTask = require("./utils/deleteTask")(db);
+const deleteTask = require("./utils/Tasks/deleteTask")(db);
 const setAdmin = require("./utils/setAdmin")(db);
 
 const dependencies = {
