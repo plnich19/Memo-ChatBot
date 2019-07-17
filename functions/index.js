@@ -47,10 +47,10 @@ const getMemberProfile = require("./utils/Members/getMemberProfile")(
 const getMemberProfilebyId = require("./utils/Members/getMemberProfilebyId")(
   db
 );
-const getMembersLength = require("./utils/getMembersLength")(db);
+const getMembersLength = require("./utils/Members/getMembersLength")(db);
 const DeleteUserData = require("./utils/Members/DeleteUserData")(db);
 const DeleteGroupData = require("./utils/Groups/DeleteGroupData")(db);
-const updateMember = require("./utils/updateMember")(db);
+const updateMember = require("./utils/Members/updateMember")(db);
 const createTask = require("./utils/Tasks/createTask")(db, client);
 const updateTask = require("./utils/Tasks/updateTask")(db);
 const updateTime = require("./utils/Tasks/updateTime")(db, client);
