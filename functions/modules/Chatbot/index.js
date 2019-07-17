@@ -31,23 +31,12 @@ module.exports = function Chatbot({
           const groupId = req.body.events[0].source.groupId;
           const getUsers = await getMembers(groupId);
           replyCorouselToRoom(groupId, getUsers);
-        } else if (reqMessage.toLowerCase().includes("getmemberprofile")) {
-          const userSaid = req.body.events[0].message.text;
-          const groupId = req.body.events[0].source.groupId;
-          const writeTask = await getMemberProfile(groupId, userSaid, true);
         } else if (reqMessage.includes("#create")) {
-          if (reqMessage.includes("@")) {
-            const userSaid = reqMessage.split("#create")[1];
-            console.log("userSaid = ", userSaid);
-            const groupId = req.body.events[0].source.groupId;
-            const userId = req.body.events[0].source.userId;
-            createTask(replyToken, groupId, userId, userSaid, true);
-          } else {
-            const userSaid = reqMessage.split("#create")[1];
-            const groupId = req.body.events[0].source.groupId;
-            const userId = req.body.events[0].source.userId;
-            createTask(replyToken, groupId, userId, userSaid, false);
-          }
+          return require("./createCmd"({
+            reqMessage,
+            createTask,
+            replyToken
+          }))(req, res);
         } else if (reqMessage.toLowerCase() === "#display") {
           const groupId = req.body.events[0].source.groupId;
           replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");
