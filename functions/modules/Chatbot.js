@@ -50,22 +50,9 @@ module.exports = function Chatbot({
             const userId = req.body.events[0].source.userId;
             createTask(replyToken, groupId, userId, userSaid, false);
           }
-        } else if (reqMessage.toLowerCase() === "updatetask") {
-          const groupId = req.body.events[0].source.groupId;
-          //updateTask(groupId,taskId);
-        } else if (
-          reqMessage.toLowerCase() === "gettasks" ||
-          reqMessage.toLowerCase() === "#display"
-        ) {
+        } else if (reqMessage.toLowerCase() === "#display") {
           const groupId = req.body.events[0].source.groupId;
           replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");
-        } else if (reqMessage.toLowerCase() === "updatemember") {
-          const groupId = req.body.events[0].source.groupId;
-          const userId = req.body.events[0].source.userId;
-          updateMember(groupId, userId);
-        } else if (reqMessage.toLowerCase().includes("gettaskdetail")) {
-          const groupId = req.body.events[0].source.groupId;
-          getTaskDetailNotDone(groupId);
         }
       }
     } else if (reqType === "join") {
@@ -79,8 +66,6 @@ module.exports = function Chatbot({
           - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
       replyToRoom(groupId, welComeMsg);
       replyConfirmButton(replyToken);
-      // const memberIds = await getGroupMemberIds(groupId);
-      // console.log(memberIds);
     } else if (reqType === "leave") {
       const groupId = req.body.events[0].source.groupId;
       DeleteGroupData(groupId);
