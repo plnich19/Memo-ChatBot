@@ -3,7 +3,6 @@ module.exports = function Chatbot({
   functions,
   getMembers,
   replyCorouselToRoom,
-  getMemberProfile,
   createTask,
   replyLiff,
   replyConfirmButton,
