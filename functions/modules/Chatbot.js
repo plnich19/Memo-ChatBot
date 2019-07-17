@@ -1,10 +1,12 @@
 module.exports = function Chatbot({
   db,
   functions,
+  dataOneDocumentRef,
   getMembers,
   replyCorouselToRoom,
   getMemberProfile,
   createTask,
+  WriteGroupData,
   replyLiff,
   updateMember,
   getTaskDetailNotDone,
@@ -81,6 +83,7 @@ module.exports = function Chatbot({
       replyConfirmButton(replyToken);
       // const memberIds = await getGroupMemberIds(groupId);
       // console.log(memberIds);
+      WriteGroupData(groupId);
     } else if (reqType === "leave") {
       const groupId = req.body.events[0].source.groupId;
       DeleteGroupData(groupId);
