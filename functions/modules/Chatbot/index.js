@@ -36,7 +36,7 @@ module.exports = function Chatbot({
             reqMessage,
             createTask,
             replyToken
-          }))(req, res);
+          })(req, res);
         } else if (reqMessage.toLowerCase() === "#display") {
           const groupId = req.body.events[0].source.groupId;
           replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");
