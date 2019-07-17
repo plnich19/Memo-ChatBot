@@ -55,7 +55,7 @@ const createTask = require("./utils/Tasks/createTask")(db, client);
 const updateTask = require("./utils/Tasks/updateTask")(db);
 const updateTime = require("./utils/Tasks/updateTime")(db, client);
 const deleteTask = require("./utils/Tasks/deleteTask")(db);
-const setAdmin = require("./utils/setAdmin")(db);
+const setAdmin = require("./utils/Members/setAdmin")(db);
 
 const dependencies = {
   db,
