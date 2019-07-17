@@ -34,13 +34,7 @@ module.exports = function DataAPI({
         getTasks: require("./getTasks")({ getTasks }),
         updateTask: require("./updateTask")({ updateTask }),
         deleteTask: require("./deleteTask")({ deleteTask }),
-        getYourTask: require("./getYourTask")({ getYourTask }),
-        getTaskDetailNotDone: require("./getTaskDetailNotDone")({
-          getTaskDetailNotDone
-        }),
-        getTaskDetailbyDate: require("./getTaskDetailbyDate")({
-          getTaskDetailbyDate
-        })
+        getYourTask: require("./getYourTask")({ getYourTask })
       }[action] || responseError;
 
     return responseAction(req, res);
