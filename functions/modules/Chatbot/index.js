@@ -32,7 +32,7 @@ module.exports = function Chatbot({
           const getUsers = await getMembers(groupId);
           replyCorouselToRoom(groupId, getUsers);
         } else if (reqMessage.includes("#create")) {
-          return require("./createCmd"({
+          return require("./createCmd")({
             reqMessage,
             createTask,
             replyToken
