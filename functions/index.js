@@ -31,8 +31,10 @@ const getYourTask = require("./utils/Tasks/getYourTask")(db);
 const getTaskDetailNotDone = require("./utils/Tasks/getTaskDetailNotDone")(db);
 const getTaskDetailbyDate = require("./utils/Tasks/getTaskDetailbyDate")(db);
 const getTaskDetailDueDate = require("./utils/Tasks/getTaskDetailDueDate")(db);
-const getGroupIds = require("./utils/getGroupIds");
-const getUserProfileById = require("./utils/getUserProfileById")(client);
+const getGroupIds = require("./utils/Groups/getGroupIds");
+const getUserProfileById = require("./utils/Members/getUserProfileById")(
+  client
+);
 const getTargetLimitForAdditionalMessages = require("./utils/getLineAPI/getTargetLimitForAdditionalMessages")(
   request
 );
@@ -40,15 +42,20 @@ const getNumberOfMessagesSentThisMonth = require("./utils/getLineAPI/getNumberOf
   request
 );
 const getMembers = require("./utils/getMembers")(db);
-const getMemberProfile = require("./utils/getMemberProfile")(db, client);
-const getMemberProfilebyId = require("./utils/getMemberProfilebyId")(db);
+const getMemberProfile = require("./utils/Members/getMemberProfile")(
+  db,
+  client
+);
+const getMemberProfilebyId = require("./utils/Members/getMemberProfilebyId")(
+  db
+);
 const getMembersLength = require("./utils/getMembersLength")(db);
-const DeleteUserData = require("./utils/DeleteUserData")(db);
-const DeleteGroupData = require("./utils/DeleteGroupData")(db);
+const DeleteUserData = require("./utils/Members/DeleteUserData")(db);
+const DeleteGroupData = require("./utils/Groups/DeleteGroupData")(db);
 const updateMember = require("./utils/updateMember")(db);
-const createTask = require("./utils/createTask")(db, client);
+const createTask = require("./utils/Tasks/createTask")(db, client);
 const updateTask = require("./utils/Tasks/updateTask")(db);
-const updateTime = require("./utils/updateTime")(db, client);
+const updateTime = require("./utils/Tasks/updateTime")(db, client);
 const deleteTask = require("./utils/Tasks/deleteTask")(db);
 const setAdmin = require("./utils/setAdmin")(db);
 
