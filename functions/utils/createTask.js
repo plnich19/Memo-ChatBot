@@ -36,6 +36,7 @@ module.exports = function createTask(db, client) {
             snapshots.forEach(querySnapshot => {
               querySnapshot.docs.map(element => {
                 assigneeIdArray.push(element.id);
+                return `${element.id} is pushed`;
               });
             });
             return assigneeIdArray;

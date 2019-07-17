@@ -83,8 +83,10 @@ module.exports = function CronEndpoint({
                         } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
                       );
                     }
+                    return "Task.userID is mapped";
                   });
                 }
+                return "TasksArray is mapped";
               });
             });
             return res.status(200).send(ret);
@@ -140,9 +142,12 @@ module.exports = function CronEndpoint({
                         } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
                       );
                     }
+                    return "task.userId is mapped";
                   });
                 }
+                return "TasksArray is mapped";
               });
+              return "GroupsArray is mapped";
             });
             return res.status(200).send(ret);
           }
@@ -152,5 +157,6 @@ module.exports = function CronEndpoint({
       const ret = { message: "action parameter missing" };
       return res.status(400).send(ret);
     }
+    return "CronEndpoint running successful";
   });
 };
