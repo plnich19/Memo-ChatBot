@@ -1,7 +1,7 @@
-const ytdTimestamp = require("./ytdTimestamp");
-const tdTimestamp = require("./tdTimestamp");
-const anHourLaterTimestamp = require("./anHourLaterTimestamp");
-const ThirtyMinsLaterTimestamp = require("./ThirtyMinsLaterTimestamp");
+const ytdTimestamp = require("../Timestamp/ytdTimestamp");
+const tdTimestamp = require("../Timestamp/tdTimestamp");
+const anHourLaterTimestamp = require("../Timestamp/anHourLaterTimestamp");
+const ThirtyMinsLaterTimestamp = require("../Timestamp/ThirtyMinsLaterTimestamp");
 const getTasksData = require("./getTasksData");
 
 module.exports = function getTaskDetailDueDate(db) {
@@ -42,7 +42,6 @@ module.exports = function getTaskDetailDueDate(db) {
           createby: task.createby
         });
       }
-      return "getTaskDetail is mapped";
     });
     console.log("TasksArray = ", TasksArray);
     return TasksArray;

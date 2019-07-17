@@ -1,6 +1,6 @@
 const getTasksData = require("./getTasksData");
-const ytdTimestamp = require("./ytdTimestamp");
-const tdTimestamp = require("./tdTimestamp");
+const ytdTimestamp = require("../Timestamp/ytdTimestamp");
+const tdTimestamp = require("../Timestamp/tdTimestamp");
 
 module.exports = function getTaskDetailNotDone(db) {
   return async function(groupId) {

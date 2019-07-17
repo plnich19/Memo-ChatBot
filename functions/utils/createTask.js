@@ -1,6 +1,6 @@
 module.exports = function createTask(db, client) {
-  const replyDatePicker = require("./replyDatePicker")(client);
-  const replyConfirmButton = require("./replyConfirmButton")(client);
+  const replyDatePicker = require("./reply/replyDatePicker")(client);
+  const replyConfirmButton = require("./reply/replyConfirmButton")(client);
   const getMemberProfile = require("./getMemberProfile")(db, client);
 
   return async function(replyToken, groupId, userId, userSaid, bool) {

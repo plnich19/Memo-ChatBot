@@ -1,7 +1,7 @@
 module.exports = function getMemberProfile(db, client) {
   const getUsersData = require("./getUsersData");
-  const replyToRoom = require("./replyToRoom")(client);
-  const replyCorouselToRoom = require("./replyCorouselToRoom")(client);
+  const replyToRoom = require("./reply/replyToRoom")(client);
+  const replyCorouselToRoom = require("./reply/replyCorouselToRoom")(client);
 
   return async function(groupId, name, bool) {
     var writeTask = true;

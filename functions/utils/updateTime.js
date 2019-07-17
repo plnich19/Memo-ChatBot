@@ -2,7 +2,7 @@ const moment = require("moment");
 
 module.exports = function updateTime(db, client) {
   const getMemberProfilebyId = require("./getMemberProfilebyId")(db);
-  const reply = require("./reply")(client);
+  const reply = require("./reply/reply")(client);
 
   return function(replyToken, groupId, taskId, datetime) {
     var dateParse = Date.parse(datetime);

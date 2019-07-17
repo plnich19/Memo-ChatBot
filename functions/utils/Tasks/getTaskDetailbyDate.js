@@ -1,5 +1,5 @@
-const ytdTimestampbyDate = require("./ytdTimestampbyDate");
-const tdTimestampbyDate = require("./tdTimestampbyDate");
+const ytdTimestampbyDate = require("../Timestamp/ytdTimestampbyDate");
+const tdTimestampbyDate = require("../Timestamp/tdTimestampbyDate");
 const getTasksData = require("./getTasksData");
 
 module.exports = function getTaskDetailbyDate(db) {
