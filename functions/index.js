@@ -39,7 +39,7 @@ const getTargetLimitForAdditionalMessages = require("./utils/getLineAPI/getTarge
 const getNumberOfMessagesSentThisMonth = require("./utils/getLineAPI/getNumberOfMessagesSentThisMonth")(
   request
 );
-const getMembers = require("./utils/getMembers")(db);
+const getMembers = require("./utils/Members/getMembers")(db);
 const getMemberProfile = require("./utils/Members/getMemberProfile")(
   db,
   client
