@@ -28,8 +28,6 @@ const replyLiff = require("./utils/reply/replyLiff")(client);
 
 const getTasks = require("./utils/Tasks/getTasks")(db);
 const getYourTask = require("./utils/Tasks/getYourTask")(db);
-const getTaskDetailNotDone = require("./utils/Tasks/getTaskDetailNotDone")(db);
-const getTaskDetailbyDate = require("./utils/Tasks/getTaskDetailbyDate")(db);
 const getTaskDetailDueDate = require("./utils/Tasks/getTaskDetailDueDate")(db);
 const getGroupIds = require("./utils/Groups/getGroupIds");
 const getUserProfileById = require("./utils/Members/getUserProfileById")(
@@ -71,8 +69,6 @@ const dependencies = {
   replyLiff,
   getTasks,
   getYourTask,
-  getTaskDetailNotDone,
-  getTaskDetailbyDate,
   getTaskDetailDueDate,
   getGroupIds,
   getUserProfileById,
