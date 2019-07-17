@@ -35,7 +35,8 @@ module.exports = function Chatbot({
           return require("./createCmd")({
             reqMessage,
             createTask,
-            replyToken
+            replyToken,
+            groupId
           })(req, res);
         } else if (reqMessage.toLowerCase() === "#display") {
           replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");
@@ -54,19 +55,13 @@ module.exports = function Chatbot({
     } else if (reqType === "leave") {
       DeleteGroupData(groupId);
     } else if (reqType === "memberJoined") {
-      const userId = req.body.events[0].joined.members[0].userId;
-      const userProfile = await getUserProfileById(userId);
-      const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}
-          คำแนะนำการใช้งานน้องโน๊ต
-          - คุณ ${
-            userProfile.displayName
-          } โปรดกดยืนยันการใช้งานน้องโน๊ตด้านล่างด้วยนะครับ
-          คำสั่ง
-          - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
-          - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
-          - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
-      replyToRoom(groupId, welComeMsg);
-      replyConfirmButton(replyToken);
+      return require("./MemberJoinedCond")({
+        getUserProfileById,
+        groupId,
+        replyToken,
+        replyToRoom,
+        replyConfirmButton
+      })(req, res);
     } else if (reqType === "memberLeft") {
       const userId = req.body.events[0].left.members[0].userId;
       DeleteUserData(groupId, userId);
