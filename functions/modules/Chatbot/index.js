@@ -20,6 +20,7 @@ module.exports = function Chatbot({
     console.log("reqType = ", reqType);
     const replyToken = req.body.events[0].replyToken;
     console.log("replyToken = ", replyToken);
+    const groupId = req.body.events[0].source.groupId;
     if (reqType === "message") {
       const msgType = req.body.events[0].message.type;
       if (msgType === "text") {
@@ -28,7 +29,6 @@ module.exports = function Chatbot({
           reqMessage = reqMessage.replace("#Create", "#create");
         }
         if (reqMessage.toLowerCase() === "#member") {
-          const groupId = req.body.events[0].source.groupId;
           const getUsers = await getMembers(groupId);
           replyCorouselToRoom(groupId, getUsers);
         } else if (reqMessage.includes("#create")) {
@@ -38,12 +38,10 @@ module.exports = function Chatbot({
             replyToken
           })(req, res);
         } else if (reqMessage.toLowerCase() === "#display") {
-          const groupId = req.body.events[0].source.groupId;
           replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");
         }
       }
     } else if (reqType === "join") {
-      const groupId = req.body.events[0].source.groupId;
       const welComeMsg = `สวัสดีครับ น้องโน๊ตขอขอบคุณที่ท่านแอดน้องโน๊ตเข้ากลุ่ม
            คำแนะนำการใช้งานน้องโน๊ต
           - สมาชิกในกลุ่มทุกท่านต้องแอดน้องโน๊ตเป็นเพื่อนและกดยืนยันการใช้งานด้านล่างด้วยครับ
@@ -54,11 +52,9 @@ module.exports = function Chatbot({
       replyToRoom(groupId, welComeMsg);
       replyConfirmButton(replyToken);
     } else if (reqType === "leave") {
-      const groupId = req.body.events[0].source.groupId;
       DeleteGroupData(groupId);
     } else if (reqType === "memberJoined") {
       const userId = req.body.events[0].joined.members[0].userId;
-      const groupId = req.body.events[0].source.groupId;
       const userProfile = await getUserProfileById(userId);
       const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}
           คำแนะนำการใช้งานน้องโน๊ต
@@ -73,10 +69,8 @@ module.exports = function Chatbot({
       replyConfirmButton(replyToken);
     } else if (reqType === "memberLeft") {
       const userId = req.body.events[0].left.members[0].userId;
-      const groupId = req.body.events[0].source.groupId;
       DeleteUserData(groupId, userId);
     } else if (reqType === "follow") {
-      const groupId = req.body.events[0].source.userId;
       const welComeMsg = `สวัสดีครับ นี่คือน้องโน๊ตเองครับ 
          คำแนะนำการใช้งาน
         - แอดน้องโน๊ตเข้ากลุ่มเพื่อใช้งานนะครับ
@@ -88,7 +82,6 @@ module.exports = function Chatbot({
     } else if (reqType === "postback") {
       const postbackData = req.body.events[0].postback.data;
       if (postbackData === "confirm") {
-        const groupId = req.body.events[0].source.groupId;
         const userId = req.body.events[0].source.userId;
         const userProfile = await getUserProfileById(userId);
         const welComeMsg = `คุณ ${
@@ -114,16 +107,13 @@ module.exports = function Chatbot({
           });
         // <--End write data part-->
       } else if (postbackData.includes("Make admin")) {
-        const groupId = req.body.events[0].source.groupId;
         const MakeAdminSplitText = postbackData.split(" ");
         setAdmin(groupId, MakeAdminSplitText);
       } else if (postbackData.includes("taskId=")) {
-        const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split("=");
         const datetime = req.body.events[0].postback.params.datetime;
         updateTime(replyToken, groupId, splitText[1], datetime);
       } else if (postbackData.includes("cancel")) {
-        const groupId = req.body.events[0].source.groupId;
         const splitText = postbackData.split("=");
         let FindtasksDocumentRef = db
           .collection("data")
