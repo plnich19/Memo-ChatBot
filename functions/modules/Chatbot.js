@@ -6,8 +6,6 @@ module.exports = function Chatbot({
   getMemberProfile,
   createTask,
   replyLiff,
-  updateMember,
-  getTaskDetailNotDone,
   replyConfirmButton,
   DeleteGroupData,
   DeleteUserData,
