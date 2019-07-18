@@ -19,9 +19,6 @@ module.exports = function(dependencies) {
         dataOneDocumentRef,
         reply
       })(req, res);
-    } else if (postbackData.includes("Make admin")) {
-      const MakeAdminSplitText = postbackData.split(" ");
-      setAdmin(groupId, MakeAdminSplitText);
     } else if (postbackData.includes("taskId=")) {
       return require("./taskId")({
         replyToken,
@@ -39,5 +36,10 @@ module.exports = function(dependencies) {
         reply
       })(req, res);
     }
+
+    // else if (postbackData.includes("Make admin")) {
+    //   const MakeAdminSplitText = postbackData.split(" ");
+    //   setAdmin(groupId, MakeAdminSplitText);
+    // }
   };
 };
