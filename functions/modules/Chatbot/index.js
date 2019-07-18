@@ -1,3 +1,8 @@
+function responseError(_, res) {
+  const ret = { message: "action is not defined" };
+  return res.status(400).send(ret);
+}
+
 module.exports = function Chatbot({
   db,
   functions,
@@ -21,51 +26,49 @@ module.exports = function Chatbot({
     const replyToken = req.body.events[0].replyToken;
     console.log("replyToken = ", replyToken);
     const groupId = req.body.events[0].source.groupId;
-    if (reqType === "message") {
-      return require("./reqTypeMsg")({
-        getMembers,
-        replyCorouselToRoom,
-        replyLiff,
-        createTask,
-        replyToken,
-        groupId
-      })(req, res);
-    } else if (reqType === "join") {
-      return require("./reqTypeJoin")({
-        replyToRoom,
-        replyToken,
-        replyConfirmButton
-      })(req, res);
-    } else if (reqType === "leave") {
-      DeleteGroupData(groupId);
-    } else if (reqType === "memberJoined") {
-      return require("./MemberJoinedCond")({
-        getUserProfileById,
-        groupId,
-        replyToken,
-        replyToRoom,
-        replyConfirmButton
-      })(req, res);
-    } else if (reqType === "memberLeft") {
-      return require("./memberLeftCond")({
-        DeleteUserData,
-        groupId
-      })(req, res);
-    } else if (reqType === "follow") {
-      return require("./followCond")({
-        replyToken
-      })(req, res);
-    } else if (reqType === "postback") {
-      return require("./postback")({
-        db,
-        getUserProfileById,
-        replyToken,
-        groupId,
-        dataOneDocumentRef,
-        getMemberProfilebyId,
-        reply,
-        updateTime
-      })(req, res);
-    }
+
+    const responseAction =
+      {
+        message: require("./reqTypeMsg")({
+          getMembers,
+          replyCorouselToRoom,
+          replyLiff,
+          createTask,
+          replyToken,
+          groupId
+        }),
+        join: require("./reqTypeJoin")({
+          replyToRoom,
+          replyToken,
+          replyConfirmButton
+        }),
+        leave: DeleteGroupData(groupId),
+        memberJoined: require("./reqTypememberJoined")({
+          getUserProfileById,
+          groupId,
+          replyToken,
+          replyToRoom,
+          replyConfirmButton
+        }),
+        memberLeft: require("./reqTypememberLeft")({
+          DeleteUserData,
+          groupId
+        }),
+        follow: require("./reqTypeFollow")({
+          replyToken
+        }),
+        postback: require("./reqTypepostback")({
+          db,
+          getUserProfileById,
+          replyToken,
+          groupId,
+          dataOneDocumentRef,
+          getMemberProfilebyId,
+          reply,
+          updateTime
+        })
+      }[reqType] || responseError;
+
+    return responseAction(req, res);
   });
 };
