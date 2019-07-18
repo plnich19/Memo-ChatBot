@@ -28,5 +28,6 @@ module.exports = function(dependencies) {
         replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");
       }
     }
+    return "reqTypeMsg runs";
   };
 };

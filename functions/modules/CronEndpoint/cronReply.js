@@ -16,6 +16,7 @@ module.exports = function(dependencies) {
         return replyLiff(groupId, message);
         //return "Successfully replyLiff";
       }
+      return "GroupsArray is mapped";
     });
     return res.status(200).send("ผ่าน");
   };

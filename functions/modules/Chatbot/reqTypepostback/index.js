@@ -1,5 +1,5 @@
 module.exports = function(dependencies) {
-  return async function(req, res) {
+  return function(req, res) {
     const {
       db,
       getUserProfileById,
@@ -41,5 +41,6 @@ module.exports = function(dependencies) {
     //   const MakeAdminSplitText = postbackData.split(" ");
     //   setAdmin(groupId, MakeAdminSplitText);
     // }
+    return "postback data function runs";
   };
 };

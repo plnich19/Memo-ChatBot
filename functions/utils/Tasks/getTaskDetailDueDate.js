@@ -42,6 +42,7 @@ module.exports = function getTaskDetailDueDate(db) {
           createby: task.createby
         });
       }
+      return "TaskDetail is mapped";
     });
     console.log("TasksArray = ", TasksArray);
     return TasksArray;

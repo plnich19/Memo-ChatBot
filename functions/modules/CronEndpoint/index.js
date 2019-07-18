@@ -72,5 +72,6 @@ module.exports = function CronEndpoint({
         }[action] || responseError;
       return responseAction(req, res);
     }
+    return res.status(200).send("Cronjob!");
   });
 };
