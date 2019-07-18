@@ -23,10 +23,12 @@ module.exports = function(dependencies) {
       const MakeAdminSplitText = postbackData.split(" ");
       setAdmin(groupId, MakeAdminSplitText);
     } else if (postbackData.includes("taskId=")) {
-      return require("./taskId")({ replyToken, postbackData, updateTime })(
-        req,
-        res
-      );
+      return require("./taskId")({
+        replyToken,
+        groupId,
+        postbackData,
+        updateTime
+      })(req, res);
     } else if (postbackData.includes("cancel")) {
       return require("./cancle")({
         db,
