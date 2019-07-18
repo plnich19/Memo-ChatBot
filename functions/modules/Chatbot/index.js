@@ -62,17 +62,14 @@ module.exports = function Chatbot({
         replyConfirmButton
       })(req, res);
     } else if (reqType === "memberLeft") {
-      const userId = req.body.events[0].left.members[0].userId;
-      DeleteUserData(groupId, userId);
+      return require("./memberLeftCond")({
+        DeleteUserData,
+        groupId
+      })(req, res);
     } else if (reqType === "follow") {
-      const welComeMsg = `สวัสดีครับ นี่คือน้องโน๊ตเองครับ 
-         คำแนะนำการใช้งาน
-        - แอดน้องโน๊ตเข้ากลุ่มเพื่อใช้งานนะครับ
-         คำสั่ง 
-        - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
-        - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
-        - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
-      reply(replyToken, welComeMsg);
+      return require("./followCond")({
+        replyToken
+      })(req, res);
     } else if (reqType === "postback") {
       const postbackData = req.body.events[0].postback.data;
       if (postbackData === "confirm") {
