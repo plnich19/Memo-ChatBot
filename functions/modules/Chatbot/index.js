@@ -10,6 +10,7 @@ module.exports = function Chatbot({
   getMembers,
   replyCorouselToRoom,
   createTask,
+  replyToRoom,
   replyLiff,
   replyConfirmButton,
   DeleteGroupData,
@@ -17,14 +18,11 @@ module.exports = function Chatbot({
   reply,
   getUserProfileById,
   getMemberProfilebyId,
-  setAdmin,
   updateTime
 }) {
   return functions.region("asia-east2").https.onRequest(async (req, res) => {
     const reqType = req.body.events[0].type;
-    console.log("reqType = ", reqType);
     const replyToken = req.body.events[0].replyToken;
-    console.log("replyToken = ", replyToken);
     const groupId = req.body.events[0].source.groupId;
 
     const responseAction =
