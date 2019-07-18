@@ -49,6 +49,7 @@ const getMemberProfilebyId = require("./utils/Members/getMemberProfilebyId")(
 );
 const getMembersLength = require("./utils/Members/getMembersLength")(db);
 const DeleteUserData = require("./utils/Members/DeleteUserData")(db);
+const WriteGroupData = require("./utils/Groups/WriteGroupData")(db);
 const DeleteGroupData = require("./utils/Groups/DeleteGroupData")(db);
 const updateMember = require("./utils/Members/updateMember")(db);
 const createTask = require("./utils/Tasks/createTask")(db, client);
@@ -79,6 +80,7 @@ const dependencies = {
   getMemberProfilebyId,
   getMembersLength,
   DeleteUserData,
+  WriteGroupData,
   DeleteGroupData,
   updateMember,
   createTask,

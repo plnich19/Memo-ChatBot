@@ -13,6 +13,7 @@ module.exports = function Chatbot({
   replyToRoom,
   replyLiff,
   replyConfirmButton,
+  WriteGroupData,
   DeleteGroupData,
   DeleteUserData,
   reply,
@@ -36,11 +37,13 @@ module.exports = function Chatbot({
           groupId
         }),
         join: require("./reqTypeJoin")({
+          groupId,
           replyToRoom,
           replyToken,
-          replyConfirmButton
+          replyConfirmButton,
+          WriteGroupData
         }),
-        leave: DeleteGroupData(groupId),
+        leave: require("./reqTypeLeave")({ groupId, DeleteGroupData }),
         memberJoined: require("./reqTypememberJoined")({
           getUserProfileById,
           groupId,
@@ -53,7 +56,8 @@ module.exports = function Chatbot({
           groupId
         }),
         follow: require("./reqTypeFollow")({
-          replyToken
+          replyToken,
+          reply
         }),
         postback: require("./reqTypepostback")({
           db,
