@@ -11,10 +11,8 @@ module.exports = function(dependencies) {
     GroupsArray.map(groupId => {
       if (replyCondition === "room") {
         return replyToRoom(groupId, message);
-        //return "Successfully replyToRoom";
       } else if (replyCondition === "liff") {
         return replyLiff(groupId, message);
-        //return "Successfully replyLiff";
       }
       return "GroupsArray is mapped";
     });
