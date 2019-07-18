@@ -11,8 +11,10 @@ module.exports = function(dependencies) {
     } = dependencies;
     const postbackData = req.body.events[0].postback.data;
     if (postbackData === "confirm") {
+      console.log("confirm");
       const userId = req.body.events[0].source.userId;
       const userProfile = await getUserProfileById(userId);
+      console.log("userprofile = ", userProfile.displayName);
       const welComeMsg = `คุณ ${userProfile.displayName} เข้าร่วมการใช้งานแล้ว`;
       reply(replyToken, welComeMsg);
       // <---Write data part-->

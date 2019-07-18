@@ -80,7 +80,7 @@ module.exports = function Chatbot({
         getMemberProfilebyId,
         reply,
         updateTime
-      });
+      })(req, res);
     }
   });
 };
