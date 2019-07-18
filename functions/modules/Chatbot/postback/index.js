@@ -1,11 +1,13 @@
 module.exports = function(dependencies) {
-  return async function(req, res, db) {
+  return async function(req, res) {
     const {
+      db,
       getUserProfileById,
       replyToken,
       dataOneDocumentRef,
       getMemberProfilebyId,
-      reply
+      reply,
+      updateTime
     } = dependencies;
     const postbackData = req.body.events[0].postback.data;
     if (postbackData === "confirm") {
