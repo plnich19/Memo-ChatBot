@@ -76,6 +76,7 @@ module.exports = function Chatbot({
         db,
         getUserProfileById,
         replyToken,
+        groupId,
         dataOneDocumentRef,
         getMemberProfilebyId,
         reply,

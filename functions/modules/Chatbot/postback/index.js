@@ -4,6 +4,7 @@ module.exports = function(dependencies) {
       db,
       getUserProfileById,
       replyToken,
+      groupId,
       dataOneDocumentRef,
       getMemberProfilebyId,
       reply,
