@@ -23,9 +23,7 @@ module.exports = function(dependencies) {
       const MakeAdminSplitText = postbackData.split(" ");
       setAdmin(groupId, MakeAdminSplitText);
     } else if (postbackData.includes("taskId=")) {
-      const splitText = postbackData.split("=");
-      const datetime = req.body.events[0].postback.params.datetime;
-      updateTime(replyToken, groupId, splitText[1], datetime);
+      return require("./taskId")({ postbackData, updateTime })(req, res);
     } else if (postbackData.includes("cancel")) {
       const splitText = postbackData.split("=");
       let FindtasksDocumentRef = db

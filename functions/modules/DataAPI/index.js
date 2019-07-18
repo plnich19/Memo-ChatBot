@@ -9,9 +9,7 @@ module.exports = function DataAPI({
   getTasks,
   updateTask,
   deleteTask,
-  getYourTask,
-  getTaskDetailNotDone,
-  getTaskDetailbyDate
+  getYourTask
 }) {
   return functions.region("asia-east2").https.onRequest(async (req, res) => {
     res.set("Access-Control-Allow-Origin", "*");
