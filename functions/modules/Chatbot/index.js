@@ -34,7 +34,10 @@ module.exports = function Chatbot({
           replyLiff,
           createTask,
           replyToken,
-          groupId
+          groupId,
+          replyConfirmButton,
+          WriteGroupData,
+          replyToRoom
         }),
         join: require("./reqTypeJoin")({
           groupId,

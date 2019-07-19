@@ -6,7 +6,9 @@ module.exports = function(dependencies) {
       replyLiff,
       createTask,
       replyToken,
-      groupId
+      groupId,
+      replyConfirmButton,
+      replyToRoom
     } = dependencies;
     const msgType = req.body.events[0].message.type;
     if (msgType === "text") {
@@ -26,6 +28,13 @@ module.exports = function(dependencies) {
         })(req, res);
       } else if (reqMessage.toLowerCase() === "#display") {
         replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");
+      } else if (reqMessage.toLowerCase() === "#help") {
+        return require("./help")({
+          groupId,
+          replyToRoom,
+          replyToken,
+          replyConfirmButton
+        })(req, res);
       }
     }
     return "reqTypeMsg runs";

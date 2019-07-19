@@ -9,17 +9,9 @@ module.exports = function replyDatePicker(client) {
         text: "เลือกวัน deadline ไหม? ไม่เลือกก็ได้นะ",
         actions: [
           {
-            type: "datetimepicker",
+            type: "uri",
             label: "เลือกวันเวลา",
-            data: `taskId=${taskId}`,
-            mode: "datetime",
-            initial: dateLimit,
-            min: dateLimit
-          },
-          {
-            type: "postback",
-            label: "Cancel",
-            data: `cancel=${taskId}`
+            uri: `line://app/1568521906-qP1vaA4y/?mytask=1`
           }
         ]
       }

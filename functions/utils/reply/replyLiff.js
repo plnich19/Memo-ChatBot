@@ -7,7 +7,7 @@ module.exports = function replyLiff(client) {
         type: "bubble",
         hero: {
           type: "image",
-          url: "https://sv1.picz.in.th/images/2019/07/19/KRGSPk.jpg",
+          url: "https://sv1.picz.in.th/images/2019/07/19/KRynO8.png",
           size: "full",
           aspectRatio: "3:1",
           aspectMode: "cover",
