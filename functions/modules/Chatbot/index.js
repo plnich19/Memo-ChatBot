@@ -47,9 +47,9 @@ module.exports = function Chatbot({
         memberJoined: require("./reqTypememberJoined")({
           getUserProfileById,
           groupId,
+          reply,
           replyToken,
-          replyToRoom,
-          replyConfirmButton
+          dataOneDocumentRef
         }),
         memberLeft: require("./reqTypememberLeft")({
           DeleteUserData,
