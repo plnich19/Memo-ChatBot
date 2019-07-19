@@ -7,39 +7,31 @@ module.exports = function(dependencies) {
     GroupsArray.map(async groupId => {
       const TasksArray = await getTaskDetailDueDate(groupId);
       console.log("ret = ", TasksArray);
+      const anHour = function(id, title) {
+        return replyToRoom(
+          id,
+          `น้องโน๊ตมาเตือนว่าคุณมีงาน ${title} ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
+        );
+      };
+      const aHalf = function(id, title) {
+        return replyToRoom(
+          id,
+          `คุณมีงาน ${title} ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
+        );
+      };
       TasksArray.map(task => {
         if (task.userId.length === 0) {
           if (task.condition === "anHour") {
-            return replyToRoom(
-              task.createby,
-              `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
-                task.title
-              } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
-            );
+            return anHour(task.createby, task.title);
           } else if (task.condition === "aHalf") {
-            return replyToRoom(
-              task.createby,
-              `คุณมีงาน ${
-                task.title
-              } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
-            );
+            return anHalf(task.createby, task.title);
           }
         } else {
           task.userId.map(userId => {
             if (task.condition === "anHour") {
-              return replyToRoom(
-                userId,
-                `น้องโน๊ตมาเตือนว่าคุณมีงาน ${
-                  task.title
-                } ที่จะต้องส่งในอีกหนึ่งชมข้างหน้าครับ!`
-              );
+              return anHour(userId, task.title);
             } else if (task.condition === "aHalf") {
-              return replyToRoom(
-                userId,
-                `คุณมีงาน ${
-                  task.title
-                } ที่จะต้องส่งในอีกครึ่งชั่วโมง! อย่าลืมอัพเดทสถานะงานนะครับ!`
-              );
+              return aHalf(userId, task.title);
             }
             return "Task.userID is mapped";
           });
