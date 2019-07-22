@@ -8,23 +8,21 @@ module.exports = function(dependencies) {
       replyToken,
       groupId,
       replyConfirmButton,
-      replyToRoom
+      replyToRoom,
+      dataOneDocumentRef
     } = dependencies;
     const msgType = req.body.events[0].message.type;
     if (msgType === "text") {
       let reqMessage = req.body.events[0].message.text || "";
       if (reqMessage !== "") {
         reqMessage = reqMessage.replace("#Create", "#create");
-      }
-      if (reqMessage.toLowerCase() === "#member") {
-        const getUsers = await getMembers(groupId);
-        replyCorouselToRoom(groupId, getUsers);
       } else if (reqMessage.includes("#create")) {
         return require("./createCmd")({
           reqMessage,
           createTask,
           replyToken,
-          groupId
+          groupId,
+          dataOneDocumentRef
         })(req, res);
       } else if (reqMessage.toLowerCase() === "#display") {
         replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");

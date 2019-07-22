@@ -37,7 +37,8 @@ module.exports = function Chatbot({
           groupId,
           replyConfirmButton,
           WriteGroupData,
-          replyToRoom
+          replyToRoom,
+          dataOneDocumentRef
         }),
         join: require("./reqTypeJoin")({
           groupId,
