@@ -2,7 +2,7 @@ module.exports = function replyConfirmButton(client) {
   return function(replyToken) {
     return client.replyMessage(replyToken, {
       type: "template",
-      altText: "this is a buttons template",
+      altText: "คลิกเพื่อยืนยันการใช้งาน",
       template: {
         type: "buttons",
         actions: [
