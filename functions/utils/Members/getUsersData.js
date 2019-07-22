@@ -8,8 +8,7 @@ module.exports = function getUsersData(db) {
       UsersArray.push({
         userId: doc.id,
         displayName: data.displayName,
-        pictureUrl: data.pictureUrl,
-        role: data.role
+        pictureUrl: data.pictureUrl
       });
     });
     return UsersArray;

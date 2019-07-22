@@ -2,15 +2,15 @@ module.exports = function replyDatePicker(client) {
   return function(replyToken, groupId, taskId, dateLimit) {
     return client.pushMessage(groupId, {
       type: "template",
-      altText: "This is a buttons template",
+      altText: "คลิกเพื่อดูโน๊ต",
       template: {
         type: "buttons",
-        title: "เลือกวันที่เวลา",
-        text: "เลือกวัน deadline ไหม? ไม่เลือกก็ได้นะ",
+        title: "จด task เรียบร้อยแล้วครับ",
+        text: "เพิ่มวันที่, เปลี่ยนชื่อ, ดู task ได้ตรงนี้เลย!",
         actions: [
           {
             type: "uri",
-            label: "เลือกวันเวลา",
+            label: "ดูโน๊ต",
             uri: `line://app/1568521906-qP1vaA4y/?mytask=1`
           }
         ]

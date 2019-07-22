@@ -1,7 +1,6 @@
 module.exports = function getMemberProfile(db, client) {
   const getUsersData = require("./getUsersData");
   const replyToRoom = require("../reply/replyToRoom")(client);
-  const replyCorouselToRoom = require("../reply/replyCorouselToRoom")(client);
 
   return async function(groupId, name, bool) {
     var writeTask = true;
@@ -11,8 +10,6 @@ module.exports = function getMemberProfile(db, client) {
       }
       return true;
     };
-    // var userSaidArray = userSaid.split("@");
-    // console.log("(getMemberProfile) userSaidArray = ",userSaidArray);
     // <-- Read data from database part -->
     let FindmembersDocumentRef = db
       .collection("data")
@@ -30,7 +27,7 @@ module.exports = function getMemberProfile(db, client) {
       // replyConfirmButton(groupId);
     } else {
       if (bool) {
-        replyCorouselToRoom(groupId, getMemberProfile);
+        //replyCorouselToRoom(groupId, getMemberProfile);
       } else {
         writeTask = true;
       }
