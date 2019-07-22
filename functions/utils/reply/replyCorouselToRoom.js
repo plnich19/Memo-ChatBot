@@ -10,7 +10,7 @@ module.exports = function replyCorouselToRoom(client) {
           return {
             thumbnailImageUrl: member.pictureUrl,
             title: member.displayName,
-            text: member.role,
+            text: "tEXT",
             actions: [
               {
                 type: "postback",

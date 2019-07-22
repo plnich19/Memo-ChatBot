@@ -8,7 +8,8 @@ module.exports = function(dependencies) {
       replyToken,
       groupId,
       replyConfirmButton,
-      replyToRoom
+      replyToRoom,
+      dataOneDocumentRef
     } = dependencies;
     const msgType = req.body.events[0].message.type;
     if (msgType === "text") {
@@ -24,7 +25,8 @@ module.exports = function(dependencies) {
           reqMessage,
           createTask,
           replyToken,
-          groupId
+          groupId,
+          dataOneDocumentRef
         })(req, res);
       } else if (reqMessage.toLowerCase() === "#display") {
         replyLiff(groupId, "กดดูลิสต์ข้างล่างได้เลย!");

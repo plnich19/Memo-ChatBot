@@ -2,8 +2,16 @@ module.exports = function createTask(db, client) {
   const replyDatePicker = require("../reply/replyDatePicker")(client);
   const replyConfirmButton = require("../reply/replyConfirmButton")(client);
   const getMemberProfile = require("../Members/getMemberProfile")(db, client);
+  const getUserProfileById = require("../Members/getUserProfileById")(client);
 
-  return async function(replyToken, groupId, userId, userSaid, bool) {
+  return async function(
+    replyToken,
+    groupId,
+    userId,
+    userSaid,
+    bool,
+    dataOneDocumentRef
+  ) {
     let assigneeIdArray = [];
     var assigneeName = [];
     var tasktitle = userSaid.split("#to")[0].trim();
@@ -49,6 +57,23 @@ module.exports = function createTask(db, client) {
       assigneeIdArray = await getAssigneeIdArray(assigneeName);
     } else {
       onlyone = true;
+      const userProfile = await getUserProfileById(userId);
+      // <---Write data part-->
+      dataOneDocumentRef
+        .doc(groupId)
+        .collection("members")
+        .doc(userId)
+        .set({
+          displayName: userProfile.displayName,
+          pictureUrl: userProfile.pictureUrl
+        })
+        .then(() => {
+          console.log("User successfully written!");
+          return "Finished writing task";
+        })
+        .catch(error => {
+          console.error("Error writing document: ", error);
+        });
     }
     if (assigneeIdArray.length === assigneeName.length) {
       if (onlyone === true) {

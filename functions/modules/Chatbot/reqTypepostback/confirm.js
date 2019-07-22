@@ -19,8 +19,7 @@ module.exports = function(dependencies) {
       .doc(userId)
       .set({
         displayName: userProfile.displayName,
-        pictureUrl: userProfile.pictureUrl,
-        role: "Member"
+        pictureUrl: userProfile.pictureUrl
       })
       .then(() => {
         console.log("User successfully written!");
