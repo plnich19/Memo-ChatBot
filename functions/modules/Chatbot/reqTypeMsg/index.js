@@ -16,6 +16,10 @@ module.exports = function(dependencies) {
       let reqMessage = req.body.events[0].message.text || "";
       if (reqMessage !== "") {
         reqMessage = reqMessage.replace("#Create", "#create");
+      }
+      if (reqMessage.toLowerCase() === "#member") {
+        const getUsers = await getMembers(groupId);
+        replyCorouselToRoom(groupId, getUsers);
       } else if (reqMessage.includes("#create")) {
         return require("./createCmd")({
           reqMessage,
