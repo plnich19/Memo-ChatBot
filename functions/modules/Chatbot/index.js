@@ -49,6 +49,7 @@ module.exports = function Chatbot({
         }),
         leave: require("./reqTypeLeave")({ groupId, DeleteGroupData }),
         memberJoined: require("./reqTypememberJoined")({
+          db,
           getUserProfileById,
           groupId,
           replyToken,
