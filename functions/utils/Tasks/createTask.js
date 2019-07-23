@@ -3,6 +3,7 @@ module.exports = function createTask(db, client) {
   const replyConfirmButton = require("../reply/replyConfirmButton")(client);
   const getMemberProfile = require("../Members/getMemberProfile")(db, client);
   const getUserProfileById = require("../Members/getUserProfileById")(client);
+  const reply = require("../reply/reply")(client);
 
   return async function(
     replyToken,
@@ -57,6 +58,7 @@ module.exports = function createTask(db, client) {
       assigneeIdArray = await getAssigneeIdArray(assigneeName);
     } else {
       onlyone = true;
+<<<<<<< Updated upstream
       const userProfile = await getUserProfileById(userId);
       // <---Write data part-->
       dataOneDocumentRef
@@ -74,6 +76,30 @@ module.exports = function createTask(db, client) {
         .catch(error => {
           console.error("Error writing document: ", error);
         });
+=======
+      try {
+        const userProfile = await getUserProfileById(replyToken, userId);
+        console.log("userProfile = ", userProfile);
+        // <---Write data part-->
+        dataOneDocumentRef
+          .doc(groupId)
+          .collection("members")
+          .doc(userId)
+          .set({
+            displayName: userProfile.displayName,
+            pictureUrl: userProfile.pictureUrl
+          })
+          .then(() => {
+            console.log("User successfully written!");
+            return "Finished writing task";
+          })
+          .catch(error => {
+            console.error("Error writing document: ", error);
+          });
+      } catch (e) {
+        reply(replyToken, "Test Naja");
+      }
+>>>>>>> Stashed changes
     }
     if (assigneeIdArray.length === assigneeName.length) {
       if (onlyone === true) {

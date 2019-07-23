@@ -8,7 +8,7 @@ module.exports = function(dependencies) {
       reply
     } = dependencies;
     const userId = req.body.events[0].source.userId;
-    const userProfile = await getUserProfileById(userId);
+    const userProfile = await getUserProfileById(replyToken, userId);
     console.log("userprofile = ", userProfile.displayName);
     const welComeMsg = `คุณ ${userProfile.displayName} เข้าร่วมการใช้งานแล้ว`;
     reply(replyToken, welComeMsg);

@@ -9,7 +9,7 @@ module.exports = function(dependencies) {
     } = dependencies;
 
     const userId = req.body.events[0].joined.members[0].userId;
-    const userProfile = await getUserProfileById(userId);
+    const userProfile = await getUserProfileById(replyToken, userId);
     const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}
     คำแนะนำการใช้งานน้องโน๊ต
     - คุณ ${
