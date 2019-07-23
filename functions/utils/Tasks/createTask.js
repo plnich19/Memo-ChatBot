@@ -57,7 +57,8 @@ module.exports = function createTask(db, client) {
       assigneeIdArray = await getAssigneeIdArray(assigneeName);
     } else {
       onlyone = true;
-      const userProfile = await getUserProfileById(userId);
+      const userProfile = await getUserProfileById(replyToken, userId);
+      console.log("userProfile = ", userProfile);
       // <---Write data part-->
       dataOneDocumentRef
         .doc(groupId)
