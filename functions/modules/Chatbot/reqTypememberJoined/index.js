@@ -16,10 +16,9 @@ module.exports = function(dependencies) {
       userProfile.displayName
     } โปรดกดยืนยันการใช้งานน้องโน๊ตในมือถือด้วยครับ
     คำสั่ง
-    - #create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
-    - #create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
-    - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ
-    - #help เพื่อแสดงวิธีการใช้งาน`;
+    - #Create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
+    - #Create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
+    - #display เพื่อให้บอทแสดง task list ของวันนี้ นายท่านสามารถแก้สถานะแล้วก็ข้อมูลของ task ได้ตรงนี้นะครับ`;
     replyToRoom(groupId, welComeMsg);
     replyConfirmButton(replyToken);
   };
