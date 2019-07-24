@@ -43,6 +43,7 @@ module.exports = function CronEndpoint({
     let MembersCount = await getMembersLength(GroupsArray);
     var TotalMembers = Math.max(...MembersCount);
     let MsgUse = TotalMembers + getNumberMsg;
+    console.log("msguse = ", MsgUse);
 
     if (remain >= MsgUse) {
       const cronReply = require("./cronReply");
