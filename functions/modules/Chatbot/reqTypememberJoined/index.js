@@ -12,10 +12,6 @@ module.exports = function(dependencies) {
     const userId = req.body.events[0].joined.members[0].userId;
     const userProfile = await getUserProfileById(userId);
     const welComeMsg = `ยินดีต้อนรับ ${userProfile.displayName}
-    คำแนะนำการใช้งานน้องโน๊ต
-    - คุณ ${
-      userProfile.displayName
-    } โปรดกดยืนยันการใช้งานน้องโน๊ตในมือถือด้วยครับ
     คำสั่ง
     - #create [ชื่อ task] #to @name เพื่อสร้าง task ใหม่และมอบหมายงานให้คนๆ นั้น
     - #create [ชื่อ task] ในกรณีที่ไม่มีผู้รับงานเฉพาะเจาะจง 
@@ -37,8 +33,6 @@ module.exports = function(dependencies) {
         console.error("Error writing document: ", err);
         return "Error writing document";
       });
-
     replyToRoom(groupId, welComeMsg);
-    replyConfirmButton(replyToken);
   };
 };
