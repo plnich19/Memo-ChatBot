@@ -2,6 +2,7 @@ module.exports = function(dependencies) {
   return async function(req, res) {
     const {
       db,
+      reply,
       getUserProfileById,
       groupId,
       replyToken,
